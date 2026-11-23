@@ -1,0 +1,114 @@
+{
+  "format": "mc-blueprint",
+  "version": 1,
+  "meta": {
+    "name": "Cabana pequena",
+    "description": "Cabana 5×5 de carvalho com telhado de pinheiro",
+    "category": "casa",
+    "minecraftVersion": "1.21"
+  },
+  "size": {
+    "x": 7,
+    "y": 7,
+    "z": 7
+  },
+  "palette": {
+    "L": "oak_log",
+    "P": "oak_planks",
+    "G": "glass_pane",
+    "D": "oak_door[half=lower,facing=south]",
+    "d": "oak_door[half=upper,facing=south]"
+  },
+  "layers": [
+    {
+      "y": 1,
+      "name": "Paredes com porta",
+      "rows": [
+        ".......",
+        ".LPPPL.",
+        ".P...P.",
+        ".P...P.",
+        ".P...P.",
+        ".LPDPL.",
+        "......."
+      ]
+    },
+    {
+      "y": 2,
+      "name": "Janelas",
+      "rows": [
+        ".......",
+        ".LPGPL.",
+        ".P...P.",
+        ".G...G.",
+        ".P...P.",
+        ".LPdPL.",
+        "......."
+      ]
+    },
+    {
+      "y": 3,
+      "name": "Topo das paredes",
+      "rows": [
+        ".......",
+        ".LPPPL.",
+        ".P...P.",
+        ".P...P.",
+        ".P...P.",
+        ".LPPPL.",
+        "......."
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "op": "fill",
+      "from": [1, 0, 1],
+      "to": [5, 0, 5],
+      "block": "cobblestone",
+      "note": "Piso"
+    },
+    {
+      "op": "roof",
+      "from": [1, 3, 0],
+      "to": [5, 3, 6],
+      "block": "spruce_stairs",
+      "axis": "x",
+      "gable": "spruce_planks",
+      "note": "Mesmo y do topo das paredes; beiral de 1 bloco ao norte e ao sul"
+    },
+    {
+      "op": "set",
+      "at": [2, 1, 2],
+      "block": "crafting_table"
+    },
+    {
+      "op": "set",
+      "at": [4, 1, 2],
+      "block": "chest[facing=south]"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Piso",
+      "description": "Quadrado 5×5 de pedregulho.",
+      "yFrom": 0,
+      "yTo": 0
+    },
+    {
+      "title": "Paredes",
+      "description": "Toras nos cantos, tábuas no resto. Porta no meio do lado sul, janelas no meio dos outros lados.",
+      "yFrom": 1,
+      "yTo": 3
+    },
+    {
+      "title": "Telhado",
+      "description": "Escadas de pinheiro subindo dos lados norte e sul até a cumeeira, com laje no topo. Oitões de tábua de pinheiro.",
+      "yFrom": 3,
+      "yTo": 6
+    }
+  ],
+  "notes": [
+    "Porta virada para o sul."
+  ]
+}

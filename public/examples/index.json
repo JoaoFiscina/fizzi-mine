@@ -1,0 +1,6 @@
+[
+  { "file": "sobrado-etapas.projeto.json", "name": "Sobrado (projeto em etapas)" },
+  { "file": "casa-simples.json", "name": "Casa inicial (operations + roof)" },
+  { "file": "cabana.json", "name": "Cabana (exemplo do prompt)" },
+  { "file": "farm-cana.json", "name": "Farm de cana (layers)" }
+]

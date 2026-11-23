@@ -1,0 +1,24 @@
+# dependências e build
+node_modules/
+dist/
+
+# segredos (o app não usa chave nenhuma, mas por garantia)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets*
+
+# projetos pessoais e configurações locais
+projetos/
+.claude/
+.vscode/
+.idea/
+.tmp/
+*.local
+
+# lixo
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,61 @@
+{
+  "format": "mc-blueprint",
+  "version": 1,
+  "meta": {
+    "name": "Farm de cana simples",
+    "description": "Duas fileiras de cana na areia com um canal de água no meio. Colheita manual.",
+    "category": "farm",
+    "minecraftVersion": "1.21"
+  },
+  "size": { "x": 9, "y": 3, "z": 5 },
+  "palette": {
+    "B": "stone_bricks",
+    "D": "sand",
+    "W": "water",
+    "C": "sugar_cane"
+  },
+  "layers": [
+    {
+      "y": 0,
+      "name": "Base",
+      "rows": [
+        "BBBBBBBBB",
+        "BBBBBBBBB",
+        "BBBBBBBBB",
+        "BBBBBBBBB",
+        "BBBBBBBBB"
+      ]
+    },
+    {
+      "y": 1,
+      "name": "Areia e canal",
+      "rows": [
+        "BBBBBBBBB",
+        "BDDDDDDDB",
+        "BWWWWWWWB",
+        "BDDDDDDDB",
+        "BBBBBBBBB"
+      ]
+    },
+    {
+      "y": 2,
+      "name": "Cana",
+      "rows": [
+        ".........",
+        ".CCCCCCC.",
+        ".........",
+        ".CCCCCCC.",
+        "........."
+      ]
+    }
+  ],
+  "steps": [
+    { "title": "Base", "description": "Chão 9×5 de tijolos de pedra (segura a água).", "yFrom": 0, "yTo": 0 },
+    { "title": "Areia e água", "description": "Borda de tijolos, 2 fileiras de areia e o canal de água no meio (z = 2).", "yFrom": 1, "yTo": 1 },
+    { "title": "Plantar", "description": "Uma cana em cada bloco de areia. Ela cresce sozinha até 3 de altura.", "yFrom": 2, "yTo": 2 }
+  ],
+  "notes": [
+    "Exemplo usando camadas em texto (layers).",
+    "Para o canal de 7 blocos bastam 2 baldes, um em cada ponta: a água corrente também faz a cana crescer. A lista mostra 7 porque conta cada bloco de água como fonte."
+  ]
+}

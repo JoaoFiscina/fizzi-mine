@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FIZZI MINE · Blueprints</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>⛏ FIZZI MINE <span>blueprints</span></h1>
+      <div class="actions">
+        <button id="prompt-btn" class="btn" title="Começar uma construção nova do zero">＋ Novo</button>
+        <button id="paste-btn" class="btn primary" title="Cole aqui a resposta da IA (Ctrl+V na página também funciona)">📥 Colar resposta</button>
+        <button id="edit-btn" class="btn primary" title="Pedir à IA para trocar, apagar ou ampliar algo no projeto aberto" disabled>✏️ Alterar com IA</button>
+        <label class="btn" title="Abrir um projeto, um blueprint (.json) ou uma resposta salva">
+          📂 Abrir
+          <input id="file-input" type="file" accept=".json,.txt,application/json,text/plain" hidden />
+        </label>
+        <details class="menu" id="save-menu">
+          <summary class="btn">💾 Salvar</summary>
+          <div class="menu-items">
+            <button id="save-btn" class="btn" disabled>Projeto (para continuar depois)</button>
+            <button id="export-btn" class="btn" disabled>Blueprint único (.json)</button>
+            <button id="shot-btn" class="btn" disabled>Imagem do 3D (.png)</button>
+          </div>
+        </details>
+        <select id="example-select" title="Abrir um exemplo">
+          <option value="">Exemplos…</option>
+        </select>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="panel" id="left">
+        <section id="project"></section>
+        <section id="info">
+          <p class="muted">Como usar:</p>
+          <ol class="howto">
+            <li><b>＋ Novo</b>: descreva a construção e copie o prompt.</li>
+            <li>Cole no Claude, ChatGPT ou Gemini (pode anexar fotos).</li>
+            <li>Copie a resposta e clique em <b>📥 Colar resposta</b>.</li>
+            <li>Para mudar ou ampliar qualquer coisa: <b>✏️ Alterar com IA</b>.</li>
+          </ol>
+        </section>
+        <section id="errors"></section>
+        <section id="warnings"></section>
+        <section id="fixes"></section>
+        <section>
+          <h2>Passo a passo</h2>
+          <ol id="steps" class="steps"><li class="muted">—</li></ol>
+        </section>
+        <section id="notes"></section>
+      </aside>
+
+      <section id="viewport">
+        <div id="measure" class="overlay" hidden></div>
+        <div id="focus-bar" class="overlay focus-bar" hidden></div>
+        <div class="overlay hint">Clique em 2 blocos para medir · arraste para girar · roda para zoom</div>
+        <div id="empty-state" class="empty-state" hidden>
+          <p><b>Nada construído ainda.</b></p>
+          <p class="muted">Copie o prompt da próxima etapa no painel da esquerda, cole na IA e depois cole a resposta aqui.</p>
+        </div>
+      </section>
+
+      <aside class="panel" id="right">
+        <section>
+          <h2>Camada <span id="layer-label">—</span></h2>
+          <canvas id="layer-canvas"></canvas>
+          <div id="layer-summary" class="muted small"></div>
+        </section>
+        <section>
+          <div class="mat-head">
+            <h2>Materiais</h2>
+            <button id="mat-export-btn" class="btn tiny" title="Exportar lista de materiais (copiar para IA, .txt, .json)" disabled>⇩ Exportar</button>
+            <select id="mat-scope" title="Quais camadas contar">
+              <option value="all">tudo</option>
+              <option value="upto">até esta camada</option>
+              <option value="layer">só esta camada</option>
+            </select>
+          </div>
+          <div id="materials-total" class="muted small"></div>
+          <div id="materials"><p class="muted">—</p></div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="layerbar">
+      <button id="layer-down" class="btn" title="Camada abaixo ( [ )">▼</button>
+      <input id="layer-slider" type="range" min="0" max="0" value="0" aria-label="Camada" />
+      <button id="layer-up" class="btn" title="Camada acima ( ] )">▲</button>
+      <label class="check"><input id="only-layer" type="checkbox" /> só esta camada</label>
+      <button id="show-all" class="btn">Mostrar tudo</button>
+    </footer>
+
+    <dialog id="paste-dialog">
+      <form method="dialog">
+        <h2>Colar resposta da IA</h2>
+        <label class="field">
+          <span>Colar em</span>
+          <select id="paste-target"></select>
+        </label>
+        <p class="muted small">Cole a resposta inteira, do jeito que veio: texto antes ou depois e bloco ```json não atrapalham. Também aceita um projeto salvo.</p>
+        <textarea id="paste-text" rows="16" spellcheck="false" placeholder='Cole aqui a resposta da IA…'></textarea>
+        <div class="dialog-actions">
+          <button value="cancel" class="btn">Cancelar</button>
+          <button id="paste-load" value="load" class="btn primary">Carregar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="prompt-dialog">
+      <form method="dialog" id="prompt-form">
+        <h2>Novo projeto</h2>
+        <p class="muted small">Descreva a construção. O prompt já ensina o formato para a IA; você só copia e cola.</p>
+        <div class="mode-pick">
+          <label class="mode-opt">
+            <input type="radio" name="mode" value="livre" checked />
+            <span><b>Automático</b> (recomendado)<br /><small class="muted">A IA planeja e divide em partes sozinha. Você só cola cada resposta e manda "continuar".</small></span>
+          </label>
+          <label class="mode-opt">
+            <input type="radio" name="mode" value="etapas" />
+            <span><b>Por andares</b><br /><small class="muted">Etapas fixas: estrutura → detalhes de cada andar → mobília de cada andar.</small></span>
+          </label>
+          <label class="mode-opt">
+            <input type="radio" name="mode" value="rapido" />
+            <span><b>Rápido</b><br /><small class="muted">Tudo num prompt só. Bom para coisas pequenas e farms.</small></span>
+          </label>
+        </div>
+        <label class="field">
+          <span>O que você quer construir? *</span>
+          <textarea name="idea" rows="4" required placeholder="Ex.: casa medieval de 2 andares com varanda, lareira e um quarto em cima. Ou: farm de ferro para 1.21 que caiba numa área 16×16."></textarea>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Tipo</span>
+            <select name="category">
+              <option value="casa">casa</option>
+              <option value="farm">farm</option>
+              <option value="decoracao">decoração</option>
+              <option value="redstone">redstone</option>
+              <option value="outro">outro</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Versão</span>
+            <input name="version" placeholder="1.21" />
+          </label>
+          <label class="field">
+            <span>Detalhe</span>
+            <select name="detail">
+              <option value="simples">simples</option>
+              <option value="medio">médio</option>
+              <option value="detalhado">detalhado</option>
+            </select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span>Tamanho aproximado</span>
+            <input name="size" placeholder="Ex.: uns 12×10, 2 andares" />
+          </label>
+          <label class="field">
+            <span>Materiais / estilo</span>
+            <input name="materials" placeholder="Ex.: pedra, carvalho escuro, telhado de ardósia" />
+          </label>
+        </div>
+        <label class="field">
+          <span>Links de referência (vídeo, imagem, post)</span>
+          <textarea name="refs" rows="2" placeholder="Um por linha"></textarea>
+        </label>
+        <label class="check"><input type="checkbox" name="photos" /> Vou anexar fotos/prints junto com o prompt</label>
+        <div class="dialog-actions spread">
+          <div class="ai-links small">
+            Abrir:
+            <a href="https://claude.ai/new" target="_blank" rel="noopener">Claude</a> ·
+            <a href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT</a> ·
+            <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini</a>
+          </div>
+          <div class="dialog-actions">
+            <button value="cancel" class="btn">Fechar</button>
+            <button id="prompt-copy" type="button" class="btn primary">📋 Criar projeto e copiar prompt</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="edit-dialog">
+      <form method="dialog" id="edit-form">
+        <h2>✏️ Alterar ou ampliar com a IA</h2>
+        <p class="muted small">Diga o que mudar. A IA manda <b>só as mudanças</b>: ela pode trocar e apagar blocos que já existem e construir para fora, inclusive para baixo (subsolo). O app aplica por cima, sem refazer o projeto.</p>
+        <label class="field">
+          <span>O que você quer?</span>
+          <textarea name="request" rows="4" placeholder="Ex.: ampliar a parte de trás com um cômodo 6×5 ligado à cozinha · trocar o piso da sala por carvalho-escuro · fazer um porão com adega embaixo da casa, com escada saindo do hall"></textarea>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Mostrar à IA como está agora</span>
+            <select name="area"></select>
+          </label>
+        </div>
+        <label class="check"><input type="checkbox" name="newchat" /> É uma conversa nova com a IA (manda as regras do formato junto)</label>
+        <div class="dialog-actions spread">
+          <span id="edit-size" class="muted small"></span>
+          <div class="dialog-actions">
+            <button value="cancel" class="btn">Fechar</button>
+            <button id="edit-copy" type="button" class="btn primary">📋 Copiar pedido</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="mat-dialog">
+      <form method="dialog">
+        <h2>Exportar lista de materiais</h2>
+        <p class="muted small" id="mat-export-info"></p>
+        <p class="muted small">A lista mostra nome do bloco, total e em stacks de 64 (ex.: 150 = 2 stacks + 22). Se você preencheu a coluna <b>tenho</b> (ou marcou ✓), ela também mostra o que <b>falta</b>.</p>
+        <textarea id="mat-export-preview" rows="12" readonly spellcheck="false"></textarea>
+        <div class="dialog-actions">
+          <button value="close" class="btn">Fechar</button>
+          <button id="mat-export-json" type="button" class="btn">⇩ .json</button>
+          <button id="mat-export-txt" type="button" class="btn">⇩ .txt</button>
+          <button id="mat-export-copy" type="button" class="btn primary">📋 Copiar para a IA</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="copy-dialog">
+      <form method="dialog">
+        <h2>Copie o texto</h2>
+        <p class="muted small">O navegador não deixou copiar sozinho. O texto já está selecionado: aperte <b>Ctrl+C</b>.</p>
+        <textarea id="copy-text" rows="14" readonly spellcheck="false"></textarea>
+        <div class="dialog-actions">
+          <button value="close" class="btn primary">Pronto</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="tooltip" hidden></div>
+    <div id="toast" hidden></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,376 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mc-blueprint-v1",
+  "title": "Minecraft Blueprint v1",
+  "description": "Arquivo gerado pela IA e lido pelo visualizador 3D. Coordenadas: x leste, y cima, z sul; origem no canto noroeste da camada mais baixa.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "meta",
+    "size"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "mc-blueprint"
+    },
+    "version": {
+      "const": 1
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "minecraftVersion": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "size": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "description": "Caractere (1 só) -> bloco. '.' e ' ' são sempre ar.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "y",
+          "rows"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "y": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "description": "rows[z] é uma linha de norte (z=0) para sul; cada caractere é x=0,1,2... de oeste para leste.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Repete a mesma camada para cima (y, y+1, ...)."
+          }
+        }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operation"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "yFrom": {
+            "type": "integer"
+          },
+          "yTo": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "plan": {
+      "type": "object",
+      "description": "Planta (etapa 1 do modo em etapas): andares e cômodos.",
+      "required": [
+        "floors"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "type": "string"
+        },
+        "exterior": {
+          "type": "string"
+        },
+        "floors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "yFrom",
+              "yTo"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "yFrom": {
+                "type": "integer"
+              },
+              "yTo": {
+                "type": "integer"
+              },
+              "rooms": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "from": {
+                      "$ref": "#/$defs/vec3"
+                    },
+                    "to": {
+                      "$ref": "#/$defs/vec3"
+                    },
+                    "use": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "at",
+            "block"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "set"
+            },
+            "at": {
+              "$ref": "#/$defs/vec3"
+            },
+            "block": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "from",
+            "to",
+            "block"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "enum": [
+                "fill",
+                "hollow",
+                "walls",
+                "line"
+              ]
+            },
+            "from": {
+              "$ref": "#/$defs/vec3"
+            },
+            "to": {
+              "$ref": "#/$defs/vec3"
+            },
+            "block": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "from",
+            "to"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "clear"
+            },
+            "from": {
+              "$ref": "#/$defs/vec3"
+            },
+            "to": {
+              "$ref": "#/$defs/vec3"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "from",
+            "to",
+            "block"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "roof"
+            },
+            "from": {
+              "$ref": "#/$defs/vec3"
+            },
+            "to": {
+              "$ref": "#/$defs/vec3"
+            },
+            "block": {
+              "type": "string",
+              "description": "Escada do telhado, ex.: spruce_stairs"
+            },
+            "axis": {
+              "enum": [
+                "x",
+                "z"
+              ],
+              "description": "Direção da cumeeira: x = leste-oeste, z = norte-sul"
+            },
+            "ridge": {
+              "type": "string"
+            },
+            "gable": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "times",
+            "offset",
+            "operations"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "repeat"
+            },
+            "times": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "offset": {
+              "$ref": "#/$defs/vec3"
+            },
+            "operations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/operation"
+              }
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

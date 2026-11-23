@@ -1,0 +1,53 @@
+{
+  "format": "mc-blueprint",
+  "version": 1,
+  "meta": {
+    "name": "Casa inicial de madeira",
+    "description": "Casa 9×7 com fundação de pedregulho, paredes de carvalho, toras nos cantos e telhado de duas águas de pinheiro.",
+    "category": "casa",
+    "minecraftVersion": "1.21"
+  },
+  "size": { "x": 11, "y": 8, "z": 9 },
+  "operations": [
+    { "op": "fill", "from": [1, 0, 1], "to": [9, 0, 7], "block": "cobblestone", "note": "Fundação e piso" },
+    { "op": "walls", "from": [1, 1, 1], "to": [9, 3, 7], "block": "oak_planks", "note": "Paredes, 3 de altura" },
+    { "op": "line", "from": [1, 1, 1], "to": [1, 3, 1], "block": "oak_log", "note": "Canto noroeste" },
+    { "op": "line", "from": [9, 1, 1], "to": [9, 3, 1], "block": "oak_log", "note": "Canto nordeste" },
+    { "op": "line", "from": [1, 1, 7], "to": [1, 3, 7], "block": "oak_log", "note": "Canto sudoeste" },
+    { "op": "line", "from": [9, 1, 7], "to": [9, 3, 7], "block": "oak_log", "note": "Canto sudeste" },
+
+    { "op": "set", "at": [5, 1, 7], "block": "oak_door[half=lower,facing=south]", "note": "Porta na frente (sul)" },
+    { "op": "set", "at": [5, 2, 7], "block": "oak_door[half=upper,facing=south]" },
+
+    { "op": "set", "at": [3, 2, 7], "block": "glass_pane" },
+    { "op": "set", "at": [7, 2, 7], "block": "glass_pane" },
+    { "op": "set", "at": [3, 2, 1], "block": "glass_pane" },
+    { "op": "set", "at": [7, 2, 1], "block": "glass_pane" },
+    { "op": "set", "at": [1, 2, 4], "block": "glass_pane" },
+    { "op": "set", "at": [9, 2, 4], "block": "glass_pane" },
+
+    {
+      "op": "roof", "from": [1, 3, 0], "to": [9, 3, 8], "block": "spruce_stairs", "axis": "x", "gable": "spruce_planks",
+      "note": "Mesmo y do topo das paredes, com 1 bloco de beiral ao norte e ao sul"
+    },
+
+    { "op": "set", "at": [2, 1, 2], "block": "crafting_table" },
+    { "op": "set", "at": [3, 1, 2], "block": "furnace[facing=south]" },
+    { "op": "set", "at": [4, 1, 2], "block": "chest[facing=south]" },
+    { "op": "set", "at": [4, 2, 2], "block": "lantern", "note": "Lanterna em cima do baú" },
+    { "op": "set", "at": [8, 1, 3], "block": "red_bed[part=foot,facing=north]" },
+    { "op": "set", "at": [8, 1, 2], "block": "red_bed[part=head,facing=north]" },
+    { "op": "set", "at": [4, 2, 8], "block": "wall_torch[facing=south]" },
+    { "op": "set", "at": [6, 2, 8], "block": "wall_torch[facing=south]" }
+  ],
+  "steps": [
+    { "title": "Fundação", "description": "Retângulo 9×7 de pedregulho.", "yFrom": 0, "yTo": 0 },
+    { "title": "Paredes", "description": "Toras nos 4 cantos, tábuas no resto, 3 blocos de altura. Deixe os vãos da porta (sul, meio) e das janelas.", "yFrom": 1, "yTo": 3 },
+    { "title": "Telhado", "description": "A 1ª fileira de escadas fica por fora, encostada no topo da parede norte e sul. Cada fileira sobe 1 e entra 1. Laje no topo e tábuas fechando os triângulos das pontas.", "yFrom": 3, "yTo": 7 },
+    { "title": "Interior e detalhes", "description": "Bancada, fornalha, baú com lanterna, cama e tochas ao lado da porta.", "yFrom": 1, "yTo": 2 }
+  ],
+  "notes": [
+    "Exemplo feito à mão para testar o visualizador.",
+    "A porta fica no lado sul. No jogo, aperte F3 e veja \"Facing: south\" para se alinhar."
+  ]
+}

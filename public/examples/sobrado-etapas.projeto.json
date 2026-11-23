@@ -1,0 +1,190 @@
+{
+  "format": "mc-blueprint-project",
+  "version": 1,
+  "name": "Sobrado em etapas",
+  "mode": "etapas",
+  "parts": [
+    {
+      "stage": "estrutura",
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "Sobrado em etapas", "description": "Sobrado 11×9 de pedra e carvalho, com telhado de carvalho-escuro. Exemplo do modo em etapas.", "category": "casa", "minecraftVersion": "1.21" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "plan": {
+          "style": "Térreo de tijolos de pedra, andar de cima de carvalho, telhado de carvalho-escuro",
+          "floors": [
+            { "name": "Térreo", "yFrom": 0, "yTo": 4, "rooms": [
+              { "name": "Cozinha", "from": [2, 1, 3], "to": [5, 4, 8], "use": "cozinha com fornalha, defumador e mesa com cadeiras" },
+              { "name": "Sala", "from": [7, 1, 2], "to": [10, 4, 8], "use": "sala com lareira, sofá e estante" }
+            ]},
+            { "name": "1º andar", "yFrom": 5, "yTo": 14, "rooms": [
+              { "name": "Escritório", "from": [2, 6, 3], "to": [6, 8, 8], "use": "escritório com estante, mesa e cadeira" },
+              { "name": "Quarto", "from": [8, 6, 2], "to": [10, 8, 8], "use": "quarto de casal com cama, baú e tapete" }
+            ]}
+          ],
+          "exterior": "gramado em volta, caminho até a porta e postes de luz"
+        },
+        "operations": [
+          { "op": "fill", "from": [1, 0, 1], "to": [11, 0, 9], "block": "cobblestone", "note": "Piso do térreo" },
+          { "op": "walls", "from": [1, 1, 1], "to": [11, 4, 9], "block": "stone_bricks", "note": "Paredes do térreo" },
+          { "op": "fill", "from": [1, 5, 1], "to": [11, 5, 9], "block": "spruce_planks", "note": "Piso do 1º andar" },
+          { "op": "walls", "from": [1, 6, 1], "to": [11, 9, 9], "block": "oak_planks", "note": "Paredes do 1º andar" },
+          { "op": "line", "from": [1, 1, 1], "to": [1, 9, 1], "block": "spruce_log" },
+          { "op": "line", "from": [11, 1, 1], "to": [11, 9, 1], "block": "spruce_log" },
+          { "op": "line", "from": [1, 1, 9], "to": [1, 9, 9], "block": "spruce_log" },
+          { "op": "line", "from": [11, 1, 9], "to": [11, 9, 9], "block": "spruce_log" },
+
+          { "op": "fill", "from": [6, 1, 2], "to": [6, 4, 8], "block": "stone_bricks", "note": "Parede entre cozinha e sala" },
+          { "op": "set", "at": [6, 1, 5], "block": "oak_door[half=lower,facing=east]" },
+          { "op": "set", "at": [6, 2, 5], "block": "oak_door[half=upper,facing=east]" },
+          { "op": "set", "at": [8, 1, 9], "block": "oak_door[half=lower,facing=south]", "note": "Porta da frente" },
+          { "op": "set", "at": [8, 2, 9], "block": "oak_door[half=upper,facing=south]" },
+
+          { "op": "fill", "from": [3, 2, 9], "to": [3, 3, 9], "block": "glass_pane" },
+          { "op": "fill", "from": [3, 2, 1], "to": [3, 3, 1], "block": "glass_pane" },
+          { "op": "fill", "from": [9, 2, 1], "to": [9, 3, 1], "block": "glass_pane" },
+          { "op": "fill", "from": [1, 2, 5], "to": [1, 3, 5], "block": "glass_pane" },
+          { "op": "fill", "from": [3, 7, 9], "to": [3, 8, 9], "block": "glass_pane" },
+          { "op": "fill", "from": [9, 7, 9], "to": [9, 8, 9], "block": "glass_pane" },
+          { "op": "fill", "from": [5, 7, 1], "to": [5, 8, 1], "block": "glass_pane" },
+          { "op": "fill", "from": [11, 7, 5], "to": [11, 8, 5], "block": "glass_pane" },
+          { "op": "fill", "from": [1, 7, 5], "to": [1, 8, 5], "block": "glass_pane" },
+
+          { "op": "set", "at": [2, 1, 2], "block": "spruce_stairs[facing=east,half=bottom]", "note": "Escada para o 1º andar" },
+          { "op": "set", "at": [3, 2, 2], "block": "spruce_stairs[facing=east,half=bottom]" },
+          { "op": "set", "at": [4, 3, 2], "block": "spruce_stairs[facing=east,half=bottom]" },
+          { "op": "set", "at": [5, 4, 2], "block": "spruce_stairs[facing=east,half=bottom]" },
+          { "op": "set", "at": [3, 1, 2], "block": "spruce_planks" },
+          { "op": "fill", "from": [4, 1, 2], "to": [4, 2, 2], "block": "spruce_planks" },
+          { "op": "fill", "from": [5, 1, 2], "to": [5, 3, 2], "block": "spruce_planks" },
+          { "op": "clear", "from": [2, 5, 2], "to": [5, 5, 2], "note": "Vão da escada no piso de cima" },
+
+          { "op": "roof", "from": [1, 9, 0], "to": [11, 9, 10], "block": "dark_oak_stairs", "axis": "x", "gable": "dark_oak_planks" }
+        ],
+        "steps": [
+          { "title": "Piso e paredes do térreo", "description": "Piso de pedregulho 11×9 e paredes de tijolos de pedra com 4 de altura. Toras de pinheiro nos cantos.", "yFrom": 0, "yTo": 4 },
+          { "title": "Escada e piso de cima", "description": "Escada subindo para o leste encostada na parede norte da cozinha; piso de tábuas de pinheiro com o vão aberto em cima da escada.", "yFrom": 1, "yTo": 5 },
+          { "title": "Paredes do 1º andar", "description": "Paredes de tábuas de carvalho com 4 de altura.", "yFrom": 6, "yTo": 9 },
+          { "title": "Telhado", "description": "Duas águas de carvalho-escuro, cumeeira de leste a oeste.", "yFrom": 9, "yTo": 14 }
+        ]
+      }
+    },
+    {
+      "stage": "andar",
+      "floor": 0,
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "Térreo: detalhes" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "operations": [
+          { "op": "fill", "from": [7, 0, 2], "to": [10, 0, 8], "block": "oak_planks", "note": "Piso de madeira na sala" },
+          { "op": "fill", "from": [10, 1, 4], "to": [10, 4, 6], "block": "bricks", "note": "Lareira" },
+          { "op": "set", "at": [10, 1, 5], "block": "campfire" }
+        ],
+        "steps": [{ "title": "Lareira e piso da sala", "description": "Troque o piso da sala por tábuas de carvalho e faça a lareira de tijolos na parede leste.", "yFrom": 0, "yTo": 4 }]
+      }
+    },
+    {
+      "stage": "andar",
+      "floor": 1,
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "1º andar: detalhes" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "operations": [
+          { "op": "fill", "from": [7, 6, 2], "to": [7, 9, 8], "block": "oak_planks", "note": "Parede entre escritório e quarto" },
+          { "op": "set", "at": [7, 6, 5], "block": "oak_door[half=lower,facing=east]" },
+          { "op": "set", "at": [7, 7, 5], "block": "oak_door[half=upper,facing=east]" },
+          { "op": "line", "from": [2, 9, 5], "to": [10, 9, 5], "block": "spruce_log[axis=x]", "note": "Viga aparente" },
+          { "op": "line", "from": [2, 6, 3], "to": [5, 6, 3], "block": "oak_fence", "note": "Guarda-corpo do vão da escada" }
+        ],
+        "steps": [{ "title": "Divisória, viga e guarda-corpo", "yFrom": 6, "yTo": 9 }]
+      }
+    },
+    {
+      "stage": "decoracao",
+      "floor": 0,
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "Térreo: mobília" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "operations": [
+          { "op": "fill", "from": [8, 1, 4], "to": [8, 1, 6], "block": "dark_oak_stairs[facing=west,half=bottom]", "note": "Sofá virado para a lareira" },
+          { "op": "fill", "from": [9, 1, 4], "to": [9, 1, 6], "block": "red_carpet" },
+          { "op": "fill", "from": [10, 1, 7], "to": [10, 2, 8], "block": "bookshelf" },
+          { "op": "set", "at": [8, 4, 5], "block": "lantern[hanging=true]" },
+          { "op": "set", "at": [2, 1, 6], "block": "furnace[facing=east]" },
+          { "op": "set", "at": [2, 1, 7], "block": "smoker[facing=east]" },
+          { "op": "set", "at": [2, 1, 8], "block": "barrel[facing=up]" },
+          { "op": "set", "at": [4, 1, 6], "block": "oak_fence", "note": "Mesa" },
+          { "op": "set", "at": [4, 2, 6], "block": "oak_pressure_plate" },
+          { "op": "set", "at": [4, 1, 7], "block": "oak_stairs[facing=south,half=bottom]", "note": "Cadeira" },
+          { "op": "set", "at": [4, 1, 5], "block": "oak_stairs[facing=north,half=bottom]", "note": "Cadeira" },
+          { "op": "set", "at": [4, 4, 6], "block": "lantern[hanging=true]" }
+        ],
+        "steps": [
+          { "title": "Sala", "description": "Sofá de escadas virado para a lareira, tapete vermelho, estante e lanterna.", "yFrom": 1, "yTo": 4 },
+          { "title": "Cozinha", "description": "Fornalha, defumador, barril e mesa com duas cadeiras.", "yFrom": 1, "yTo": 4 }
+        ]
+      }
+    },
+    {
+      "stage": "decoracao",
+      "floor": 1,
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "1º andar: mobília" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "operations": [
+          { "op": "set", "at": [9, 6, 3], "block": "red_bed[part=foot,facing=east]" },
+          { "op": "set", "at": [10, 6, 3], "block": "red_bed[part=head,facing=east]" },
+          { "op": "set", "at": [10, 6, 6], "block": "chest[facing=west]" },
+          { "op": "fill", "from": [8, 6, 6], "to": [9, 6, 7], "block": "white_carpet" },
+          { "op": "set", "at": [9, 8, 5], "block": "lantern[hanging=true]", "note": "Pendurada na viga" },
+          { "op": "fill", "from": [2, 6, 6], "to": [2, 7, 8], "block": "bookshelf" },
+          { "op": "set", "at": [4, 6, 6], "block": "oak_slab[type=top]", "note": "Escrivaninha" },
+          { "op": "set", "at": [4, 7, 6], "block": "lantern" },
+          { "op": "set", "at": [4, 6, 7], "block": "oak_stairs[facing=south,half=bottom]" }
+        ],
+        "steps": [
+          { "title": "Quarto", "description": "Cama de casal virada para o leste, baú, tapete branco e lanterna na viga.", "yFrom": 6, "yTo": 8 },
+          { "title": "Escritório", "description": "Estante na parede oeste, escrivaninha com lanterna e cadeira.", "yFrom": 6, "yTo": 7 }
+        ]
+      }
+    },
+    {
+      "stage": "exterior",
+      "visible": true,
+      "blueprint": {
+        "format": "mc-blueprint",
+        "version": 1,
+        "meta": { "name": "Área externa" },
+        "size": { "x": 13, "y": 15, "z": 11 },
+        "operations": [
+          { "op": "fill", "from": [0, 0, 0], "to": [12, 0, 0], "block": "grass_block" },
+          { "op": "fill", "from": [0, 0, 10], "to": [12, 0, 10], "block": "grass_block" },
+          { "op": "fill", "from": [0, 0, 1], "to": [0, 0, 9], "block": "grass_block" },
+          { "op": "fill", "from": [12, 0, 1], "to": [12, 0, 9], "block": "grass_block" },
+          { "op": "set", "at": [8, 0, 10], "block": "dirt_path", "note": "Caminho até a porta" },
+          { "op": "set", "at": [6, 1, 10], "block": "oak_fence" },
+          { "op": "set", "at": [6, 2, 10], "block": "lantern" },
+          { "op": "set", "at": [10, 1, 10], "block": "oak_fence" },
+          { "op": "set", "at": [10, 2, 10], "block": "lantern" },
+          { "op": "set", "at": [0, 1, 3], "block": "poppy" },
+          { "op": "set", "at": [0, 1, 7], "block": "dandelion" }
+        ],
+        "steps": [{ "title": "Gramado, caminho e luzes", "yFrom": 0, "yTo": 2 }]
+      }
+    }
+  ]
+}
