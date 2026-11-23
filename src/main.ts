@@ -6,6 +6,7 @@ import { blockName, itemName } from './blueprint/names';
 import { flattenToBlueprint, regionTextSize, regionToPromptText } from './blueprint/serialize';
 import type { Blueprint, Step } from './blueprint/types';
 import { Viewer } from './render/viewer';
+import { forgetPack, loadSavedPack, readPack, savePack, TextureLibrary } from './render/textures';
 import { LayerView } from './ui/layerView';
 import { esc, loadComplete, loadHave, renderFixes, renderInfo, renderIssues, renderMaterials, renderNotes, renderSteps } from './ui/panels';
 import { buildExportItems, materialsJson, materialsText } from './blueprint/materialsExport';
@@ -803,3 +804,81 @@ $('edit-copy').addEventListener('click', async () => {
 
 // fecha o menu "Salvar" depois de escolher
 for (const id of ['save-btn', 'export-btn', 'shot-btn']) $(id).addEventListener('click', () => ($('save-menu') as HTMLDetailsElement).removeAttribute('open'));
+
+// ---------- Visual: cores ou texturas do jogo ----------
+
+const LOOK_KEY = 'fizzi-mine:visual';
+let textureLib: TextureLibrary | null = null;
+const packDialog = $<HTMLDialogElement>('pack-dialog');
+
+function setLook(mode: 'cores' | 'jogo') {
+  const useGame = mode === 'jogo' && !!textureLib;
+  viewer.setTextures(useGame ? textureLib : null);
+  $('look-colors').classList.toggle('active', !useGame);
+  $('look-game').classList.toggle('active', useGame);
+  try {
+    localStorage.setItem(LOOK_KEY, useGame ? 'jogo' : 'cores');
+  } catch {
+    /* sem armazenamento */
+  }
+}
+
+function updatePackStatus() {
+  $('pack-status').innerHTML = textureLib
+    ? `✔ Texturas carregadas: <b>${esc(textureLib.name)}</b> (${textureLib.count} texturas de bloco).`
+    : 'Nenhuma textura carregada ainda.';
+  $<HTMLButtonElement>('pack-forget').disabled = !textureLib;
+}
+
+$('look-colors').addEventListener('click', () => setLook('cores'));
+$('look-game').addEventListener('click', () => {
+  if (textureLib) return setLook('jogo');
+  updatePackStatus();
+  packDialog.showModal();
+});
+// clique com o botão direito (ou segurando) em "Texturas do jogo" abre a janela para trocar o arquivo
+$('look-game').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  updatePackStatus();
+  packDialog.showModal();
+});
+
+$<HTMLInputElement>('pack-input').addEventListener('change', async (e) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  $('pack-status').textContent = `Lendo ${file.name}…`;
+  try {
+    const pack = await readPack(file);
+    textureLib = new TextureLibrary(pack);
+    await savePack(pack);
+    updatePackStatus();
+    packDialog.close();
+    setLook('jogo');
+    toast(`Texturas do ${file.name} aplicadas (${pack.files.size} texturas).`, 4000);
+  } catch (err) {
+    $('pack-status').textContent = `⚠ ${(err as Error).message}`;
+  }
+});
+
+$('pack-forget').addEventListener('click', async () => {
+  await forgetPack();
+  textureLib = null;
+  setLook('cores');
+  updatePackStatus();
+  toast('Texturas esquecidas. Voltando para as cores.');
+});
+
+// ao abrir: recupera as texturas salvas no navegador
+(async () => {
+  const pack = await loadSavedPack();
+  if (pack) textureLib = new TextureLibrary(pack);
+  let saved: string | null = null;
+  try {
+    saved = localStorage.getItem(LOOK_KEY);
+  } catch {
+    /* sem armazenamento */
+  }
+  setLook(saved === 'jogo' ? 'jogo' : 'cores');
+})();

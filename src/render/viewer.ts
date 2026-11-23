@@ -4,6 +4,11 @@ import type { CompiledModel, Voxel } from '../blueprint/compile';
 import { toItem } from '../blueprint/materials';
 import { lookFor } from './blocks';
 import { geometryFor, partsFor } from './geometry';
+import { resolveFaces, TextureLibrary, type Faces } from './textures';
+import type { Kind } from './blocks';
+
+/** Formas pequenas que ficam melhor com a cor (tocha, botão, lanterna…). */
+const NO_TEXTURE = new Set<Kind>(['small', 'lantern', 'rod', 'chest', 'bed']);
 
 export interface HoverInfo {
   voxel: Voxel;
@@ -78,6 +83,8 @@ export class Viewer {
   private selLine: THREE.Line;
   private meshes: THREE.InstancedMesh[] = [];
   private materials = new Map<string, THREE.Material>();
+  private texMaterials = new Map<string, THREE.Material>();
+  private textures: TextureLibrary | null = null;
   private ghost = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, depthWrite: false });
   private texture = makeBlockTexture();
   private model?: CompiledModel;
@@ -215,19 +222,31 @@ export class Viewer {
     this.meshes = [];
     const index = this.model?.index;
 
-    type Group = { part: string; mat: THREE.Material; list: Voxel[]; transparent: boolean };
+    type Group = { part: string; mat: THREE.Material | THREE.Material[]; list: Voxel[]; transparent: boolean };
     const groups = new Map<string, Group>();
+    const lib = this.textures;
     for (const v of voxels) {
       const look = lookFor(v.id, v.props);
       const neighbor = (dx: number, dz: number) => index?.get(`${v.x + dx},${v.y},${v.z + dz}`);
       const dim = this.focusItem !== null && toItem(v)?.item !== this.focusItem;
+      // modo "texturas do jogo": descobre a textura de cada face (se não achar, fica com a cor)
+      const faces = !dim && lib && !NO_TEXTURE.has(look.kind) ? resolveFaces(v.id, v.props, lib.has) : undefined;
       for (const part of partsFor(v, look, neighbor)) {
-        const key = dim ? `ghost|${part}` : `${look.color}|${look.opacity}|${part}`;
-        let g = groups.get(key);
-        if (!g) {
-          const mat = dim ? this.ghost : this.material(`${look.color}|${look.opacity}`, look.color, look.opacity);
-          groups.set(key, (g = { part, mat, list: [], transparent: dim || look.opacity < 1 }));
+        let key: string;
+        let make: () => Group;
+        if (dim) {
+          key = `ghost|${part}`;
+          make = () => ({ part, mat: this.ghost, list: [], transparent: true });
+        } else if (faces && lib) {
+          const t = this.texturedFaces(part, faces, v);
+          key = `tex|${part}|${t.key}`;
+          make = () => ({ part, mat: t.build(), list: [], transparent: t.translucent });
+        } else {
+          key = `${look.color}|${look.opacity}|${part}`;
+          make = () => ({ part, mat: this.material(`${look.color}|${look.opacity}`, look.color, look.opacity), list: [], transparent: look.opacity < 1 });
         }
+        let g = groups.get(key);
+        if (!g) groups.set(key, (g = make()));
         g.list.push(v);
       }
     }
@@ -245,6 +264,60 @@ export class Viewer {
       this.blocks.add(mesh);
     }
     this.hoverDirty = true;
+  }
+
+  /** Liga/desliga as texturas do jogo (null = cores). */
+  setTextures(lib: TextureLibrary | null) {
+    this.textures = lib;
+    for (const m of this.texMaterials.values()) m.dispose();
+    this.texMaterials.clear();
+    if (this.model) this.showLayers(this.visible.maxY, this.visible.only);
+  }
+
+  /**
+   * Texturas por face. Ordem das faces do BoxGeometry: +x (leste), −x (oeste), +y (topo), −y (baixo), +z (sul), −z (norte).
+   * Peças com formato composto (escada, cerca…) usam uma textura só (a lateral).
+   */
+  private texturedFaces(part: string, f: Faces, v: Voxel) {
+    const six = geometryFor(part).groups.length === 6;
+    let names: string[];
+    if (six) {
+      names = [f.side, f.side, f.top, f.bottom, f.side, f.side];
+      const axis = v.props.axis;
+      if (axis === 'x') names = [f.top, f.bottom, f.side, f.side, f.side, f.side];
+      else if (axis === 'z') names = [f.side, f.side, f.side, f.side, f.top, f.bottom];
+      if (f.front) {
+        const idx = ({ east: 0, west: 1, south: 4, north: 5 } as Record<string, number>)[v.props.facing] ?? 4;
+        names[idx] = f.front;
+      }
+    } else names = [f.side];
+    const tints = names.map((_, i) => (f.tint === undefined ? undefined : f.tintTopOnly ? (six && i === 2 ? f.tint : undefined) : f.tint));
+    const translucent = names.some((n) => TextureLibrary.isTranslucent(n));
+    const key = names.map((n, i) => `${n}${tints[i] ? `#${tints[i]}` : ''}`).join(',');
+    const build = () => {
+      const mats = names.map((n, i) => this.texMaterial(n, tints[i], part === 'cross'));
+      return mats.length === 1 ? mats[0] : mats;
+    };
+    return { key, translucent, build };
+  }
+
+  private texMaterial(name: string, tint: number | undefined, doubleSide: boolean): THREE.Material {
+    const key = `${name}|${tint ?? ''}|${doubleSide}`;
+    let mat = this.texMaterials.get(key);
+    if (!mat) {
+      const translucent = TextureLibrary.isTranslucent(name);
+      mat = new THREE.MeshLambertMaterial({
+        map: this.textures!.get(name),
+        color: tint ?? 0xffffff,
+        transparent: translucent,
+        opacity: name.startsWith('water') ? 0.8 : 1,
+        depthWrite: !translucent,
+        alphaTest: translucent ? 0 : 0.5,
+        side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+      });
+      this.texMaterials.set(key, mat);
+    }
+    return mat;
   }
 
   private material(key: string, color: number, opacity: number): THREE.Material {

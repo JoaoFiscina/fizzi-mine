@@ -56,6 +56,11 @@
         <div id="measure" class="overlay" hidden></div>
         <div id="focus-bar" class="overlay focus-bar" hidden></div>
         <div class="overlay hint">Clique em 2 blocos para medir · arraste para girar · roda para zoom</div>
+        <div class="overlay look-bar">
+          <span class="muted small">Visual:</span>
+          <button id="look-colors" class="btn tiny" title="Cores lisas (rápido, funciona sempre)">🎨 Cores</button>
+          <button id="look-game" class="btn tiny" title="Texturas do seu Minecraft (lidas do seu computador)">🧱 Texturas do jogo</button>
+        </div>
         <div id="empty-state" class="empty-state" hidden>
           <p><b>Nada construído ainda.</b></p>
           <p class="muted">Copie o prompt da próxima etapa no painel da esquerda, cole na IA e depois cole a resposta aqui.</p>
@@ -220,6 +225,30 @@
           <button id="mat-export-json" type="button" class="btn">⇩ .json</button>
           <button id="mat-export-txt" type="button" class="btn">⇩ .txt</button>
           <button id="mat-export-copy" type="button" class="btn primary">📋 Copiar para a IA</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="pack-dialog">
+      <form method="dialog">
+        <h2>🧱 Texturas do seu Minecraft</h2>
+        <p class="small">Escolha o arquivo do jogo instalado no seu computador. O FIZZI MINE lê só as imagens dos blocos, <b>aqui no seu navegador</b>: nada é enviado para a internet. Ele lembra das texturas: só precisa fazer isso uma vez.</p>
+        <ol class="small howto">
+          <li>Clique em <b>Escolher arquivo</b>.</li>
+          <li>Na barra de endereço da janela, cole <code>%appdata%\.minecraft\versions</code> e aperte Enter.</li>
+          <li>Abra a pasta da versão (ex.: <code>1.21.8</code>) e escolha o <code>.jar</code> com o mesmo nome (ex.: <code>1.21.8.jar</code>).</li>
+        </ol>
+        <p class="muted small">Também funciona com um resource pack (.zip) para ver a construção com outro visual.</p>
+        <p id="pack-status" class="small"></p>
+        <div class="dialog-actions spread">
+          <button id="pack-forget" type="button" class="btn tiny">Esquecer texturas</button>
+          <div class="dialog-actions">
+            <button value="close" class="btn">Fechar</button>
+            <label class="btn primary">
+              📂 Escolher arquivo
+              <input id="pack-input" type="file" accept=".jar,.zip" hidden />
+            </label>
+          </div>
         </div>
       </form>
     </dialog>
