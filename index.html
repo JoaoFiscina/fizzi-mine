@@ -23,7 +23,8 @@
             <button id="export-btn" class="btn" disabled>Blueprint único (.json)</button>
             <button id="shot-btn" class="btn" disabled>Imagem do 3D (.png)</button>
             <button id="share-btn" class="btn" disabled>🔗 Link para compartilhar</button>
-            <button id="datapack-btn" class="btn" disabled>🎮 Levar para o jogo (fantasma / construir)</button>
+            <button id="datapack-btn" class="btn" disabled>🎮 Levar para o jogo · Java (fantasma / construir)</button>
+            <button id="bedrock-btn" class="btn" disabled>📱 Levar para o jogo · Bedrock / Realms (.mcstructure)</button>
           </div>
         </details>
         <select id="example-select" title="Abrir um exemplo">
@@ -289,6 +290,27 @@
         <div class="dialog-actions">
           <button value="close" class="btn">Fechar</button>
           <button id="datapack-download" type="button" class="btn primary">⇩ Baixar datapack</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="bedrock-dialog">
+      <form method="dialog">
+        <h2>📱 Bedrock / Realms</h2>
+        <p class="small">Gera um arquivo <b>.mcstructure</b> (o mesmo do Bloco de Estrutura). Com ele o <b>HoloPrint</b> faz um pacote de holograma que funciona no Realms, no celular, no PC e no console.</p>
+        <ol class="small howto">
+          <li>Clique em <b>⇩ Baixar .mcstructure</b>.</li>
+          <li>Abra <a href="https://holoprint-mc.github.io/" target="_blank" rel="noopener">holoprint-mc.github.io</a>, envie o arquivo e baixe o <b>.mcpack</b> gerado.</li>
+          <li>Abra o .mcpack (no PC: dois cliques; no celular: "abrir com Minecraft").</li>
+          <li><b>Realms:</b> Editar Realm → Pacotes de recursos → ative o pacote. <i>Ou</i> cada jogador ativa em Configurações → Recursos globais.</li>
+          <li>No mundo, coloque um <b>suporte de armadura</b>: o holograma aparece nele. <b>Agachar + interagir</b> no suporte troca a camada.</li>
+          <li>Construa por cima do holograma. A lista de materiais também aparece no HoloPrint.</li>
+        </ol>
+        <p class="muted small">Também dá para construir de uma vez: num mundo com cheats, use um Bloco de Estrutura no modo <b>Carregar</b> (Windows) e importe o arquivo.</p>
+        <p id="bedrock-info" class="muted small"></p>
+        <div class="dialog-actions">
+          <button value="close" class="btn">Fechar</button>
+          <button id="bedrock-download" type="button" class="btn primary">⇩ Baixar .mcstructure</button>
         </div>
       </form>
     </dialog>

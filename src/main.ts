@@ -8,6 +8,7 @@ import type { Blueprint, Step } from './blueprint/types';
 import { Viewer } from './render/viewer';
 import { encodeProject, projectFromHash, shareUrl } from './project/share';
 import { buildDatapack } from './project/datapack';
+import { buildMcstructure } from './project/mcstructure';
 import { forgetPack, loadSavedPack, readPack, savePack, TextureLibrary } from './render/textures';
 import { LayerView } from './ui/layerView';
 import { esc, loadComplete, loadHave, renderFixes, renderRaw, renderInfo, renderIssues, renderMaterials, renderNotes, renderSteps } from './ui/panels';
@@ -121,6 +122,7 @@ function rebuild(opts: { keepCamera?: boolean } = {}) {
   $<HTMLButtonElement>('mat-export-btn').disabled = !model;
   $<HTMLButtonElement>('share-btn').disabled = !project?.parts.length;
   $<HTMLButtonElement>('datapack-btn').disabled = !model;
+  $<HTMLButtonElement>('bedrock-btn').disabled = !model;
   $('empty-state').hidden = !!model || !project;
 
   if (!model || !project || !built) {
@@ -846,7 +848,7 @@ $('edit-copy').addEventListener('click', async () => {
 });
 
 // fecha o menu "Salvar" depois de escolher
-for (const id of ['save-btn', 'export-btn', 'shot-btn', 'share-btn', 'datapack-btn']) $(id).addEventListener('click', () => ($('save-menu') as HTMLDetailsElement).removeAttribute('open'));
+for (const id of ['save-btn', 'export-btn', 'shot-btn', 'share-btn', 'datapack-btn', 'bedrock-btn']) $(id).addEventListener('click', () => ($('save-menu') as HTMLDetailsElement).removeAttribute('open'));
 
 // ---------- Visual: cores ou texturas do jogo ----------
 
@@ -1001,3 +1003,19 @@ for (const el of document.querySelectorAll<HTMLElement>('#datapack-dialog .dp-cm
     if (await copyText(el.textContent ?? '')) toast(`Copiado: ${el.textContent}`);
   });
 }
+
+// ---------- 📱 Bedrock / Realms (.mcstructure) ----------
+
+const bedrockDialog = $<HTMLDialogElement>('bedrock-dialog');
+let lastStructure: ReturnType<typeof buildMcstructure> | null = null;
+$('bedrock-btn').addEventListener('click', () => {
+  if (!model || !project) return;
+  const st = (lastStructure = buildMcstructure(model, project.name));
+  const wide = st.tooWide ? ' · ⚠ mais de 64 blocos de largura: o HoloPrint mostra, mas o Bloco de Estrutura não carrega de uma vez' : '';
+  const skip = st.skipped ? ` · ${st.skipped} ficaram de fora (portal, fogo…)` : '';
+  $('bedrock-info').textContent = `${st.blocks.toLocaleString('pt-BR')} blocos · tamanho ${st.size.join('×')}${skip}${wide}. Algumas direções (portas, placas) podem sair diferentes no Bedrock.`;
+  bedrockDialog.showModal();
+});
+$('bedrock-download').addEventListener('click', () => {
+  if (lastStructure) download(lastStructure.fileName, URL.createObjectURL(new Blob([lastStructure.data as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' })));
+});
