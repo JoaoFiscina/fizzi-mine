@@ -971,14 +971,33 @@ let lastPack: ReturnType<typeof buildDatapack> | null = null;
 $('datapack-btn').addEventListener('click', () => {
   if (!model || !project) return;
   lastPack = buildDatapack(model, project.name);
-  $('datapack-cmd').textContent = lastPack.command;
-  $('datapack-clear').textContent = lastPack.clearCommand;
-  $('datapack-info').textContent = `${model.voxels.length.toLocaleString('pt-BR')} blocos em ${lastPack.commands.toLocaleString('pt-BR')} comandos · área ${model.size.x}×${model.size.y}×${model.size.z}${lastPack.commands > 60000 ? ' · ⚠ muitos comandos: o jogo pode parar no meio (limite 65.536)' : ''}.`;
+  const pack = lastPack;
+  // camada inicial: a camada atual do slider, se existir no datapack
+  const layerSel = $<HTMLSelectElement>('dp-layer');
+  layerSel.innerHTML = '';
+  for (const y of pack.layers) layerSel.add(new Option(`y = ${y}`, String(y)));
+  const cur = currentLayer() - model.offset[1];
+  layerSel.value = pack.layers.includes(cur) ? String(cur) : String(pack.layers[0] ?? 0);
+  const fill = () => {
+    for (const el of document.querySelectorAll<HTMLElement>('#datapack-dialog .dp-cmd')) {
+      const fnName = el.dataset.fn === 'fantasma/' ? `fantasma/y${layerSel.value}` : el.dataset.fn;
+      el.textContent = `/function ${pack.ns}/${fnName}`;
+    }
+  };
+  layerSel.onchange = fill;
+  fill();
+  const big = pack.ghosts > 8000 ? ' · ⚠ fantasma grande: prefira mostrar uma camada por vez' : '';
+  const many = pack.commands > 60000 ? ' · ⚠ muitos comandos para "construir" (limite 65.536)' : '';
+  $('datapack-info').textContent = `${model.voxels.length.toLocaleString('pt-BR')} blocos · ${pack.ghosts.toLocaleString('pt-BR')} no fantasma · ${pack.layers.length} camadas · área ${model.size.x}×${model.size.y}×${model.size.z}${big}${many}.`;
   datapackDialog.showModal();
 });
 $('datapack-download').addEventListener('click', () => {
   if (lastPack) download(lastPack.fileName, URL.createObjectURL(new Blob([lastPack.zip as Uint8Array<ArrayBuffer>], { type: 'application/zip' })));
 });
-$('datapack-copy').addEventListener('click', async () => {
-  if (lastPack && (await copyText(lastPack.command))) toast('Comando copiado.');
-});
+// clicar num comando copia
+for (const el of document.querySelectorAll<HTMLElement>('#datapack-dialog .dp-cmd')) {
+  el.title = 'Clique para copiar';
+  el.addEventListener('click', async () => {
+    if (await copyText(el.textContent ?? '')) toast(`Copiado: ${el.textContent}`);
+  });
+}

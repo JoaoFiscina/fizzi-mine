@@ -161,6 +161,14 @@ a { color: #7cc7ff; }
 .dialog-actions.spread { justify-content: space-between; align-items: center; flex-wrap: wrap; }
 .ai-links { color: var(--muted); }
 
+/* Janela do datapack */
+.dp-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.dp-table td { padding: 5px 4px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.dp-table td:first-child { white-space: nowrap; color: var(--muted); }
+.dp-cmd { cursor: pointer; word-break: break-all; }
+.dp-cmd:hover { outline: 1px solid var(--accent); }
+.dp-table select { padding: 2px 4px; font-size: 12px; }
+
 /* Materiais: blocos | brutos */
 .mat-tabs { display: flex; align-items: center; gap: 4px; margin: 4px 0 6px; flex-wrap: wrap; }
 .mat-tabs .btn.active { background: var(--accent-2); border-color: var(--accent); }

@@ -23,7 +23,7 @@
             <button id="export-btn" class="btn" disabled>Blueprint único (.json)</button>
             <button id="shot-btn" class="btn" disabled>Imagem do 3D (.png)</button>
             <button id="share-btn" class="btn" disabled>🔗 Link para compartilhar</button>
-            <button id="datapack-btn" class="btn" disabled>🎮 Construir no jogo (datapack)</button>
+            <button id="datapack-btn" class="btn" disabled>🎮 Levar para o jogo (fantasma / construir)</button>
           </div>
         </details>
         <select id="example-select" title="Abrir um exemplo">
@@ -270,19 +270,24 @@
 
     <dialog id="datapack-dialog">
       <form method="dialog">
-        <h2>🎮 Construir no jogo</h2>
-        <p class="small">Gera um <b>datapack</b> que monta a construção no seu mundo com um comando (Minecraft Java 1.21+, com cheats ativados).</p>
+        <h2>🎮 Levar para o jogo</h2>
+        <p class="small">Gera um <b>datapack</b> (Minecraft Java 1.21+, com cheats ativados) que mostra a construção como <b>holograma</b> para você construir por cima, ou constrói tudo de uma vez.</p>
         <ol class="small howto">
-          <li>Baixe o .zip e coloque na pasta <code>%appdata%\.minecraft\saves\&lt;seu mundo&gt;\datapacks</code> (não precisa descompactar).</li>
-          <li>No jogo, digite <code>/reload</code>.</li>
-          <li>Fique em pé onde quer o canto <b>noroeste</b> da construção: ela vai para leste (+x) e para sul (+z), e o térreo fica na altura dos seus pés.</li>
-          <li>Digite: <code id="datapack-cmd">/function …</code></li>
+          <li>Baixe o .zip e coloque em <code>%appdata%\.minecraft\saves\&lt;seu mundo&gt;\datapacks</code> (sem descompactar). No jogo: <code>/reload</code>.</li>
+          <li>Fique no canto <b>noroeste</b> do terreno e marque a posição: <code class="dp-cmd" data-fn="aqui"></code></li>
         </ol>
-        <p class="muted small">Para apagar a área depois: <code id="datapack-clear">…</code> · Dica: teste num mundo criativo ou numa cópia do mundo.</p>
+        <table class="dp-table small">
+          <tr><td>👻 Fantasma inteiro</td><td><code class="dp-cmd" data-fn="fantasma"></code></td></tr>
+          <tr><td>👻 Só uma camada</td><td><code class="dp-cmd" data-fn="fantasma/" id="dp-layer-cmd"></code> <select id="dp-layer"></select></td></tr>
+          <tr><td>✅ Ver o que falta</td><td><code class="dp-cmd" data-fn="conferir"></code> <span class="muted">(partículas verdes)</span></td></tr>
+          <tr><td>🧹 Tirar o fantasma</td><td><code class="dp-cmd" data-fn="apagar_fantasma"></code></td></tr>
+          <tr><td>🏗 Construir tudo</td><td><code class="dp-cmd" data-fn="construir"></code></td></tr>
+          <tr><td>💣 Apagar a área</td><td><code class="dp-cmd" data-fn="limpar"></code></td></tr>
+        </table>
+        <p class="muted small">Clique num comando para copiar. O fantasma não tem colisão: você anda e coloca blocos por cima, e o bloco de verdade cobre o holograma. Baús, camas e placas não aparecem no fantasma.</p>
         <p id="datapack-info" class="muted small"></p>
         <div class="dialog-actions">
           <button value="close" class="btn">Fechar</button>
-          <button id="datapack-copy" type="button" class="btn">📋 Copiar comando</button>
           <button id="datapack-download" type="button" class="btn primary">⇩ Baixar datapack</button>
         </div>
       </form>
