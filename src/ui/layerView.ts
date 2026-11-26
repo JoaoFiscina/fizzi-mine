@@ -16,6 +16,7 @@ export class LayerView {
   private cell = 12;
   private current = new Map<string, Voxel>();
   private hoverCell: { x: number; z: number } | null = null;
+  private tapTimer = 0;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -23,6 +24,13 @@ export class LayerView {
     private tooltip: HTMLElement,
   ) {
     canvas.addEventListener('mousemove', (e) => this.hover(e));
+    // toque: mostra a legenda da célula tocada por alguns segundos
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      this.hover(e);
+      clearTimeout(this.tapTimer);
+      this.tapTimer = window.setTimeout(() => (this.tooltip.hidden = true), 2500);
+    });
     canvas.addEventListener('mouseleave', () => {
       this.tooltip.hidden = true;
       this.hoverCell = null;

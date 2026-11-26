@@ -22,6 +22,8 @@
             <button id="save-btn" class="btn" disabled>Projeto (para continuar depois)</button>
             <button id="export-btn" class="btn" disabled>Blueprint único (.json)</button>
             <button id="shot-btn" class="btn" disabled>Imagem do 3D (.png)</button>
+            <button id="share-btn" class="btn" disabled>🔗 Link para compartilhar</button>
+            <button id="datapack-btn" class="btn" disabled>🎮 Construir no jogo (datapack)</button>
           </div>
         </details>
         <select id="example-select" title="Abrir um exemplo">
@@ -68,12 +70,12 @@
       </section>
 
       <aside class="panel" id="right">
-        <section>
+        <section id="sec-layer">
           <h2>Camada <span id="layer-label">—</span></h2>
           <canvas id="layer-canvas"></canvas>
           <div id="layer-summary" class="muted small"></div>
         </section>
-        <section>
+        <section id="sec-materials">
           <div class="mat-head">
             <h2>Materiais</h2>
             <button id="mat-export-btn" class="btn tiny" title="Exportar lista de materiais (copiar para IA, .txt, .json)" disabled>⇩ Exportar</button>
@@ -83,11 +85,24 @@
               <option value="layer">só esta camada</option>
             </select>
           </div>
+          <div class="mat-tabs">
+            <button id="mat-tab-blocks" class="btn tiny active" type="button" title="Blocos que vão na construção">🧱 Blocos</button>
+            <button id="mat-tab-raw" class="btn tiny" type="button" title="O que coletar no mundo para fazer tudo (troncos, pedregulho, areia…)">⛏ Brutos</button>
+            <label class="check small raw-opt" hidden><input id="raw-stonecutter" type="checkbox" /> cortador de pedras</label>
+          </div>
           <div id="materials-total" class="muted small"></div>
           <div id="materials"><p class="muted">—</p></div>
+          <div id="raw-materials" hidden></div>
         </section>
       </aside>
     </main>
+
+    <nav class="mobile-tabs" aria-label="Seções">
+      <button data-tab="3d" class="active">🧊<span>3D</span></button>
+      <button data-tab="projeto">📋<span>Projeto</span></button>
+      <button data-tab="camada">🗺<span>Camada</span></button>
+      <button data-tab="materiais">🧱<span>Materiais</span></button>
+    </nav>
 
     <footer class="layerbar">
       <button id="layer-down" class="btn" title="Camada abaixo ( [ )">▼</button>
@@ -249,6 +264,26 @@
               <input id="pack-input" type="file" accept=".jar,.zip" hidden />
             </label>
           </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="datapack-dialog">
+      <form method="dialog">
+        <h2>🎮 Construir no jogo</h2>
+        <p class="small">Gera um <b>datapack</b> que monta a construção no seu mundo com um comando (Minecraft Java 1.21+, com cheats ativados).</p>
+        <ol class="small howto">
+          <li>Baixe o .zip e coloque na pasta <code>%appdata%\.minecraft\saves\&lt;seu mundo&gt;\datapacks</code> (não precisa descompactar).</li>
+          <li>No jogo, digite <code>/reload</code>.</li>
+          <li>Fique em pé onde quer o canto <b>noroeste</b> da construção: ela vai para leste (+x) e para sul (+z), e o térreo fica na altura dos seus pés.</li>
+          <li>Digite: <code id="datapack-cmd">/function …</code></li>
+        </ol>
+        <p class="muted small">Para apagar a área depois: <code id="datapack-clear">…</code> · Dica: teste num mundo criativo ou numa cópia do mundo.</p>
+        <p id="datapack-info" class="muted small"></p>
+        <div class="dialog-actions">
+          <button value="close" class="btn">Fechar</button>
+          <button id="datapack-copy" type="button" class="btn">📋 Copiar comando</button>
+          <button id="datapack-download" type="button" class="btn primary">⇩ Baixar datapack</button>
         </div>
       </form>
     </dialog>

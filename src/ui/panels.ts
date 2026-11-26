@@ -121,6 +121,43 @@ export function loadComplete(name: string): Set<string> {
   return loadChecked(`fizzi-mine:materiais:${name}`);
 }
 
+const HOW: Record<string, string> = { craft: 'bancada', smelt: 'fornalha', stonecutter: 'cortador', other: 'ferramenta' };
+
+/** Tabela de itens brutos + passos de crafting. */
+export function renderRaw(
+  el: HTMLElement,
+  totalEl: HTMLElement,
+  r: { raw: Map<string, number>; steps: { item: string; how: string; times: number; produced: number; needed: number; in: Record<string, number>; note?: string }[]; smelts: number; fuelCoal: number },
+  missingOnly: boolean,
+) {
+  const items = [...r.raw.entries()].sort((a, b) => b[1] - a[1]);
+  const total = items.reduce((a, [, n]) => a + n, 0);
+  totalEl.textContent = total ? `${total.toLocaleString('pt-BR')} itens brutos${missingOnly ? ' (só o que falta)' : ''}` : '';
+  if (!items.length) {
+    el.innerHTML = '<p class="muted small">Nada para coletar neste filtro. ✓</p>';
+    return;
+  }
+  const rows = items
+    .map(([item, n]) => `
+      <tr>
+        <td><span class="swatch" style="background:${cssColor(item)}"></span>${esc(itemName(item))}<div class="mat-id">${esc(item)}</div></td>
+        <td class="num"><b>${n}</b></td>
+        <td class="num muted">${n >= 64 ? `${Math.floor(n / 64)}×64${n % 64 ? ` + ${n % 64}` : ''}` : n}</td>
+      </tr>`)
+    .join('');
+  const steps = r.steps
+    .map((s) => {
+      const ins = Object.entries(s.in).map(([k, v]) => `${v} ${itemName(k).toLowerCase()}`).join(' + ');
+      const extra = s.produced > s.needed ? ` <span class="muted">(sobra ${s.produced - s.needed})</span>` : '';
+      return `<li><span class="how">${HOW[s.how] ?? s.how}</span>${s.times}× → <b>${s.produced} ${esc(itemName(s.item).toLowerCase())}</b>${extra}<div class="muted">usa ${esc(ins)}${s.note ? ` · ${esc(s.note)}` : ''}</div></li>`;
+    })
+    .join('');
+  el.innerHTML = `
+    <table class="materials">${rows}</table>
+    ${r.smelts ? `<div class="raw-fuel">🔥 Fornalha: ${r.smelts} itens para queimar → <b>${r.fuelCoal} carvão</b> (ou ${Math.ceil(r.smelts / 1.5)} tábuas)</div>` : ''}
+    ${steps ? `<details class="raw-steps"><summary>Como fazer: ${r.steps.length} passo(s) de crafting/fornalha</summary><ol>${steps}</ol></details>` : ''}`;
+}
+
 export interface MaterialsOptions {
   name: string;
   focused: string | null;

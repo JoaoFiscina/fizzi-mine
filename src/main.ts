@@ -6,10 +6,13 @@ import { blockName, itemName } from './blueprint/names';
 import { flattenToBlueprint, regionTextSize, regionToPromptText } from './blueprint/serialize';
 import type { Blueprint, Step } from './blueprint/types';
 import { Viewer } from './render/viewer';
+import { encodeProject, projectFromHash, shareUrl } from './project/share';
+import { buildDatapack } from './project/datapack';
 import { forgetPack, loadSavedPack, readPack, savePack, TextureLibrary } from './render/textures';
 import { LayerView } from './ui/layerView';
-import { esc, loadComplete, loadHave, renderFixes, renderInfo, renderIssues, renderMaterials, renderNotes, renderSteps } from './ui/panels';
+import { esc, loadComplete, loadHave, renderFixes, renderRaw, renderInfo, renderIssues, renderMaterials, renderNotes, renderSteps } from './ui/panels';
 import { buildExportItems, materialsJson, materialsText } from './blueprint/materialsExport';
+import { dominantWood, rawMaterials } from './blueprint/recipes';
 import { renderProjectPanel, type SlotStatus } from './ui/projectPanel';
 import { showTooltip, tooltipHtml } from './ui/tooltip';
 import { buildAutoPrompt, buildStagePrompt, continueMessage, editMessage, projectSummary, loadDraft, saveDraft, type PromptRequest } from './prompt/builder';
@@ -116,6 +119,8 @@ function rebuild(opts: { keepCamera?: boolean } = {}) {
   $<HTMLButtonElement>('shot-btn').disabled = !model;
   $<HTMLButtonElement>('edit-btn').disabled = !model;
   $<HTMLButtonElement>('mat-export-btn').disabled = !model;
+  $<HTMLButtonElement>('share-btn').disabled = !project?.parts.length;
+  $<HTMLButtonElement>('datapack-btn').disabled = !model;
   $('empty-state').hidden = !!model || !project;
 
   if (!model || !project || !built) {
@@ -441,10 +446,47 @@ function currentMaterialLines(): MaterialLine[] {
   return allMaterials;
 }
 
+let rawMode = false;
+
+/** Itens brutos do filtro atual (descontando o que você já tem). */
+function computeRaw() {
+  const lines = currentMaterialLines();
+  const name = project?.name ?? '';
+  const have = loadHave(name);
+  const complete = loadComplete(name);
+  const needs = new Map<string, number>();
+  let missingOnly = false;
+  for (const l of lines) {
+    const h = complete.has(l.item) ? l.count : Math.min(l.count, Math.max(0, have[l.item] ?? 0));
+    if (h > 0) missingOnly = true;
+    if (l.count - h > 0) needs.set(l.item, l.count - h);
+  }
+  const res = rawMaterials(needs, { stonecutter: $<HTMLInputElement>('raw-stonecutter').checked, stickWood: dominantWood(lines.map((l) => l.item)) });
+  return { res, missingOnly };
+}
+
 function renderMaterialList() {
   if (!model || !project) return;
+  $('materials').hidden = rawMode;
+  $('raw-materials').hidden = !rawMode;
+  if (rawMode) {
+    const { res, missingOnly } = computeRaw();
+    renderRaw($('raw-materials'), $('materials-total'), res, missingOnly);
+    return;
+  }
   renderMaterials($('materials'), $('materials-total'), currentMaterialLines(), { name: project.name, focused: focusItem, onFocus: setFocus });
 }
+
+function setRawMode(on: boolean) {
+  rawMode = on;
+  $('mat-tab-blocks').classList.toggle('active', !on);
+  $('mat-tab-raw').classList.toggle('active', on);
+  ($('mat-tab-raw').parentElement!.querySelector('.raw-opt') as HTMLElement).hidden = !on;
+  renderMaterialList();
+}
+$('mat-tab-blocks').addEventListener('click', () => setRawMode(false));
+$('mat-tab-raw').addEventListener('click', () => setRawMode(true));
+$('raw-stonecutter').addEventListener('change', renderMaterialList);
 
 // ---------- Exportar lista de materiais ----------
 
@@ -462,7 +504,8 @@ function materialsExport() {
     scope,
   };
   const items = buildExportItems(currentMaterialLines(), { have: loadHave(project.name), complete: loadComplete(project.name) });
-  return { info, items, text: materialsText(info, items) };
+  const raw = computeRaw().res;
+  return { info, items, raw, text: materialsText(info, items, raw) };
 }
 
 const matDialog = $<HTMLDialogElement>('mat-dialog');
@@ -483,7 +526,7 @@ $('mat-export-txt').addEventListener('click', () => {
 });
 $('mat-export-json').addEventListener('click', () => {
   const ex = materialsExport();
-  if (ex) downloadText(`${slug(ex.info.name)}-materiais.json`, materialsJson(ex.info, ex.items));
+  if (ex) downloadText(`${slug(ex.info.name)}-materiais.json`, materialsJson(ex.info, ex.items, ex.raw));
 });
 
 function setFocus(item: string | null) {
@@ -803,7 +846,7 @@ $('edit-copy').addEventListener('click', async () => {
 });
 
 // fecha o menu "Salvar" depois de escolher
-for (const id of ['save-btn', 'export-btn', 'shot-btn']) $(id).addEventListener('click', () => ($('save-menu') as HTMLDetailsElement).removeAttribute('open'));
+for (const id of ['save-btn', 'export-btn', 'shot-btn', 'share-btn', 'datapack-btn']) $(id).addEventListener('click', () => ($('save-menu') as HTMLDetailsElement).removeAttribute('open'));
 
 // ---------- Visual: cores ou texturas do jogo ----------
 
@@ -882,3 +925,60 @@ $('pack-forget').addEventListener('click', async () => {
   }
   setLook(saved === 'jogo' ? 'jogo' : 'cores');
 })();
+
+// ---------- Celular: abas de baixo ----------
+
+function setTab(tab: string) {
+  document.body.dataset.tab = tab;
+  for (const b of document.querySelectorAll<HTMLButtonElement>('.mobile-tabs button')) b.classList.toggle('active', b.dataset.tab === tab);
+}
+for (const b of document.querySelectorAll<HTMLButtonElement>('.mobile-tabs button')) b.addEventListener('click', () => setTab(b.dataset.tab!));
+setTab('3d');
+
+// ---------- 🔗 Link para compartilhar ----------
+
+$('share-btn').addEventListener('click', async () => {
+  if (!project) return;
+  const url = shareUrl(encodeProject(exportProject(project)));
+  const big = url.length > 60000 ? ' É um link grande: se o app de mensagem cortar, mande o arquivo (Salvar → Projeto).' : '';
+  if (await copyText(url)) toast(`Link copiado (${(url.length / 1000).toFixed(1)} mil caracteres). Quem abrir vê este projeto.${big}`, 6000);
+});
+
+/** Abriu um link com projeto (#p=...): carrega e limpa o endereço. */
+function openSharedFromHash() {
+  const json = projectFromHash();
+  if (!json) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  const shared = importProject(json);
+  if (!shared) {
+    toast('O link do projeto está incompleto ou corrompido.');
+    return false;
+  }
+  if (project?.parts.length && !project.fromExample && !confirm(`Abrir o projeto compartilhado "${shared.name}"?\nO projeto atual ("${project.name}") será substituído. Se quiser guardar, cancele e use Salvar → Projeto antes.`)) return false;
+  project = shared;
+  persist();
+  rebuild();
+  toast(`Projeto compartilhado "${shared.name}" aberto.`, 4000);
+  return true;
+}
+window.addEventListener('hashchange', openSharedFromHash);
+setTimeout(openSharedFromHash, 0);
+
+// ---------- 🎮 Datapack para construir no jogo ----------
+
+const datapackDialog = $<HTMLDialogElement>('datapack-dialog');
+let lastPack: ReturnType<typeof buildDatapack> | null = null;
+$('datapack-btn').addEventListener('click', () => {
+  if (!model || !project) return;
+  lastPack = buildDatapack(model, project.name);
+  $('datapack-cmd').textContent = lastPack.command;
+  $('datapack-clear').textContent = lastPack.clearCommand;
+  $('datapack-info').textContent = `${model.voxels.length.toLocaleString('pt-BR')} blocos em ${lastPack.commands.toLocaleString('pt-BR')} comandos · área ${model.size.x}×${model.size.y}×${model.size.z}${lastPack.commands > 60000 ? ' · ⚠ muitos comandos: o jogo pode parar no meio (limite 65.536)' : ''}.`;
+  datapackDialog.showModal();
+});
+$('datapack-download').addEventListener('click', () => {
+  if (lastPack) download(lastPack.fileName, URL.createObjectURL(new Blob([lastPack.zip as Uint8Array<ArrayBuffer>], { type: 'application/zip' })));
+});
+$('datapack-copy').addEventListener('click', async () => {
+  if (lastPack && (await copyText(lastPack.command))) toast('Comando copiado.');
+});

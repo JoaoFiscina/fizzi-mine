@@ -158,8 +158,24 @@ export function itemName(item: string): string {
   if (item.startsWith('lava_bucket')) return 'Balde de lava (fonte)';
   if (item === 'redstone') return 'Redstone (pó)';
   if (item === 'string') return 'Linha';
-  const ITEMS: Record<string, string> = { carrot: 'Cenoura', potato: 'Batata', wheat_seeds: 'Sementes de trigo', beetroot_seeds: 'Sementes de beterraba' };
+  const ITEMS: Record<string, string> = {
+    carrot: 'Cenoura', potato: 'Batata', wheat_seeds: 'Sementes de trigo', beetroot_seeds: 'Sementes de beterraba',
+    stick: 'Graveto', coal: 'Carvão', iron_ingot: 'Barra de ferro', gold_ingot: 'Barra de ouro', iron_nugget: 'Pepita de ferro',
+    clay_ball: 'Bola de argila', brick: 'Tijolo (item)', nether_brick: 'Tijolo do Nether (item)', paper: 'Papel', book: 'Livro',
+    leather: 'Couro', quartz: 'Quartzo do Nether', glowstone_dust: 'Pó de pedra luminosa', prismarine_shard: 'Fragmento de prismarinho',
+    prismarine_crystals: 'Cristais de prismarinho', slime_ball: 'Bola de slime', bow: 'Arco', amethyst_shard: 'Fragmento de ametista',
+    snowball: 'Bola de neve', dried_kelp: 'Alga seca', popped_chorus_fruit: 'Fruta do coro estourada', bucket: 'Balde',
+  };
   if (ITEMS[item]) return ITEMS[item];
+  if (item.endsWith('_dye')) {
+    const DYE_M: Record<string, string> = {
+      white: 'branco', orange: 'laranja', magenta: 'magenta', light_blue: 'azul-claro', yellow: 'amarelo', lime: 'verde-limão',
+      pink: 'rosa', gray: 'cinza', light_gray: 'cinza-claro', cyan: 'ciano', purple: 'roxo', blue: 'azul', brown: 'marrom',
+      green: 'verde', red: 'vermelho', black: 'preto',
+    };
+    const color = item.slice(0, -4);
+    if (DYE_M[color]) return `Corante ${DYE_M[color]}`;
+  }
   return blockName(item);
 }
 

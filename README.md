@@ -18,7 +18,15 @@ Depois, dá para ir **alterando e ampliando** com a IA: trocar piso, abrir porta
 4. Para mudar qualquer coisa: **✏️ Alterar com IA**.
 5. Em **Materiais**, **⇩ Exportar** copia a lista de blocos para mandar a uma IA, ou baixa em .txt/.json.
 
-Os projetos ficam salvos no seu navegador. Para mandar um projeto para alguém, use **💾 Salvar → Projeto** e a pessoa abre com **📂 Abrir**.
+Mais coisas:
+
+- **⛏ Brutos** (em Materiais): o que coletar no mundo para fazer tudo (troncos, pedregulho, areia, argila, ferro…), com os passos de bancada/fornalha, o carvão necessário e a opção de usar o cortador de pedras. Desconta o que você marcou em "tenho".
+- **🧱 Texturas do jogo** (no canto do 3D): usa as texturas do *seu* Minecraft, lidas do `.jar` no seu computador.
+- **💾 Salvar → 🔗 Link para compartilhar**: o projeto inteiro vai dentro do link; quem abre já vê a construção.
+- **💾 Salvar → 🎮 Construir no jogo**: baixa um datapack; no mundo, `/reload` e `/function fizzimine:<nome>/construir` monta tudo onde você está.
+- **No celular**: o 3D ocupa a tela e as abas de baixo trocam entre 3D, Projeto, Camada e Materiais. Toque num bloco para ver o nome.
+
+Os projetos ficam salvos no seu navegador. Para mandar um projeto para alguém, use o link de compartilhar ou **💾 Salvar → Projeto** (a pessoa abre com **📂 Abrir**).
 
 Guia completo: [docs/GUIA.md](docs/GUIA.md)
 

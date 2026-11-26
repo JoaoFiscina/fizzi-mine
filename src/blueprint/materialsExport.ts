@@ -2,6 +2,7 @@
 
 import type { MaterialLine } from './materials';
 import { itemName } from './names';
+import type { RawResult } from './recipes';
 
 export interface ExportInfo {
   name: string;
@@ -70,7 +71,7 @@ const shulkers = (items: ExportItem[], key: 'count' | 'missing') =>
   Math.ceil(items.reduce((a, i) => a + Math.ceil(i[key] / i.stackSize), 0) / 27);
 
 /** Texto pronto para colar numa IA. */
-export function materialsText(info: ExportInfo, items: ExportItem[]): string {
+export function materialsText(info: ExportInfo, items: ExportItem[], raw?: RawResult): string {
   const total = items.reduce((a, i) => a + i.count, 0);
   const missing = items.reduce((a, i) => a + i.missing, 0);
   const anyHave = items.some((i) => i.have > 0);
@@ -91,11 +92,21 @@ export function materialsText(info: ExportInfo, items: ExportItem[]): string {
   lines.push('');
   lines.push(`Total: ${total.toLocaleString('pt-BR')} itens de ${items.length} tipos (~${shulkers(items, 'count')} shulker(s)).`);
   if (anyHave) lines.push(`Falta: ${missing.toLocaleString('pt-BR')} itens (~${shulkers(items, 'missing')} shulker(s)).`);
+  if (raw && raw.raw.size) {
+    lines.push('', `## Itens brutos para coletar${anyHave ? ' (só para o que falta)' : ''}`);
+    for (const [item, n] of [...raw.raw.entries()].sort((a, b) => b[1] - a[1])) lines.push(`- ${itemName(item)} (${item}): ${qty(n, stacksText(n, 64))}`);
+    if (raw.smelts) lines.push(`- Carvão para a fornalha: ${raw.fuelCoal} (${raw.smelts} itens para queimar)`);
+    lines.push('', '## Crafting / fornalha (na ordem)');
+    for (const s of raw.steps) {
+      const ins = Object.entries(s.in).map(([k, v]) => `${v} ${itemName(k).toLowerCase()}`).join(' + ');
+      lines.push(`- ${s.how === 'smelt' ? 'Fornalha' : s.how === 'stonecutter' ? 'Cortador' : s.how === 'other' ? 'Ferramenta' : 'Bancada'}: ${s.times}× → ${s.produced} ${itemName(s.item).toLowerCase()} (usa ${ins})`);
+    }
+  }
   lines.push('', 'Me ajude com essa lista: planejar a coleta (onde e como conseguir cada bloco, em que ordem), sugerir substituições mais fáceis que combinem com o estilo e conferir as contas de stacks e shulkers.');
   return lines.filter((l, idx) => l !== '' || lines[idx - 1] !== '').join('\n').replace(/^\n+/, '');
 }
 
-export function materialsJson(info: ExportInfo, items: ExportItem[]): string {
+export function materialsJson(info: ExportInfo, items: ExportItem[], raw?: RawResult): string {
   return JSON.stringify(
     {
       format: 'mc-materials',
@@ -124,6 +135,13 @@ export function materialsJson(info: ExportInfo, items: ExportItem[]): string {
         have: i.have,
         missing: i.missing,
       })),
+      ...(raw
+        ? {
+            raw: [...raw.raw.entries()].map(([id, count]) => ({ id, name: itemName(id), count })),
+            fuelCoal: raw.fuelCoal,
+            craftSteps: raw.steps.map((s) => ({ item: s.item, how: s.how, times: s.times, produced: s.produced, uses: s.in })),
+          }
+        : {}),
     },
     null,
     2,

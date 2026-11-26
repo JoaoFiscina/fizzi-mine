@@ -133,7 +133,11 @@ export class Viewer {
     let down: { x: number; y: number } | null = null;
     canvas.addEventListener('pointerdown', (e) => (down = e.button === 0 ? { x: e.clientX, y: e.clientY } : null));
     canvas.addEventListener('pointerup', (e) => {
-      if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 5) this.click(e.clientX, e.clientY);
+      if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 5) {
+        this.click(e.clientX, e.clientY);
+        // tela de toque não tem "passar o mouse": mostra a legenda do bloco tocado por alguns segundos
+        if (e.pointerType !== 'mouse') this.tapInfo(e.clientX, e.clientY);
+      }
       down = null;
     });
     canvas.addEventListener('pointermove', (e) => {
@@ -393,6 +397,15 @@ export class Viewer {
     const hit = this.raycaster.intersectObjects(solid, false)[0];
     if (!hit || hit.instanceId === undefined) return undefined;
     return (hit.object.userData.voxels as Voxel[])[hit.instanceId];
+  }
+
+  private tapTimer = 0;
+  private tapInfo(clientX: number, clientY: number) {
+    const v = this.pick(clientX, clientY);
+    if (!v) return;
+    this.onHover?.({ voxel: v, clientX, clientY });
+    clearTimeout(this.tapTimer);
+    this.tapTimer = window.setTimeout(() => this.onHover?.(null), 2500);
   }
 
   private click(clientX: number, clientY: number) {
