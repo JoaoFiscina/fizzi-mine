@@ -214,7 +214,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
     'minecraft:client_entity': {
       description: {
         identifier: 'fizzi:projecao',
-        materials: { holo: 'fizzi_holo' },
+        materials: { holo: 'entity_alphablend' },
         textures: Object.fromEntries(ids.map((id) => [id, `textures/entity/fizzi/${id}`])),
         geometry: Object.fromEntries(ids.map((id, i) => [id, `geometry.fizzi.p${i}`])),
         animations: { giro: 'animation.fizzi.giro' },
@@ -234,6 +234,8 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
         },
         geometry: "Array.geos[q.property('fizzi:projeto')]",
         materials: [{ '*': 'Material.holo' }],
+        // sempre claro: sem isso, a construção fica escura à noite ou quando o centro cai dentro de um bloco
+        ignore_lighting: true,
         textures: ["Array.texs[q.property('fizzi:projeto')]"],
         part_visibility: [
           { '*': on },
@@ -246,8 +248,6 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
     format_version: '1.8.0',
     animations: { 'animation.fizzi.giro': { loop: true, bones: { raiz: { rotation: [0, "q.property('fizzi:giro') * 90", 0] } } } },
   };
-  // translúcido e visível por dentro (igual ao HoloPrint)
-  const material = { materials: { version: '1.0.0', 'fizzi_holo:entity_alphablend': { '+states': ['DisableCulling'] } } };
 
   const meta = list.map((p, i) => ({ nome: p.nome, tam: p.tam, camadas: models[i].layers, blocos: p.b.length / 4 }));
   const projetosJs = `// Gerado pelo FIZZI MINE em ${new Date().toISOString()}\nexport const PROJETOS = ${JSON.stringify(meta)};\n`;
@@ -274,7 +274,6 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
     'entity/fizzi_projecao.entity.json': json(clientEntity),
     'render_controllers/fizzi_projecao.render_controllers.json': json(renderController),
     'animations/fizzi_projecao.animation.json': json(animation),
-    'materials/entity.material': json(material),
     'texts/pt_BR.lang': strToU8('tile.fizzi:holograma.name=Holograma\nentity.fizzi:projecao.name=Projeção\n'),
     'texts/en_US.lang': strToU8('tile.fizzi:holograma.name=Hologram\nentity.fizzi:projecao.name=Projection\n'),
     'texts/languages.json': json(['pt_BR', 'en_US']),

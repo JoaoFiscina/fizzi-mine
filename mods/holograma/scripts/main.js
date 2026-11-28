@@ -146,6 +146,7 @@ async function menu(jogador, dim, bloco) {
     e ? `Estado: ${ligado ? "§aligado§r" : "§7desligado§r"}` : "Escolha um projeto para projetar.",
     e && p ? `Camada: ${camada < 0 ? "todas" : `y=${p.camadas[camada]} (${camada + 1} de ${p.camadas.length})`}` : "",
     e ? `Giro: ${num(e, "fizzi:giro", 0) * 90}°` : "",
+    "§8Não aparece nada (só uma sombra) ou o bloco está sem a textura? O pacote de recursos «Fizzi Holograma (recursos)» não está ativo.",
   ].filter(Boolean).join("\n");
 
   const f = new ActionFormData().title("🔮 Holograma").body(corpo);

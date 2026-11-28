@@ -74,11 +74,13 @@ describe('Fizzi Holograma', () => {
     expect(m.dependencies).toContainEqual({ uuid: rm.header.uuid, version: rm.header.version });
     expect(Object.keys(r)).toEqual(expect.arrayContaining([
       'models/entity/fizzi_p0.geo.json', 'textures/entity/fizzi/p0.png', 'entity/fizzi_projecao.entity.json',
-      'render_controllers/fizzi_projecao.render_controllers.json', 'materials/entity.material',
+      'render_controllers/fizzi_projecao.render_controllers.json',
       'textures/blocks/fizzi_holograma_topo.png', 'textures/terrain_texture.json', 'blocks.json',
     ]));
     const rc = JSON.parse(strFromU8(r['render_controllers/fizzi_projecao.render_controllers.json'])).render_controllers['controller.render.fizzi.projecao'];
     expect(rc.part_visibility).toHaveLength(3); // "*" + 2 camadas
+    expect(rc.ignore_lighting).toBe(true);
+    expect(r['materials/entity.material']).toBeUndefined();
     expect([...blockTexture('lado').subarray(0, 4)]).toEqual([137, 80, 78, 71]);
   });
 
