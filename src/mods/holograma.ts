@@ -5,7 +5,10 @@
 
 import { strToU8 } from 'fflate';
 import mainJs from '../../mods/holograma/scripts/main.js?raw';
-import { compile, type CompiledModel } from '../blueprint/compile';
+import { compile, parseState, type CompiledModel, type Voxel } from '../blueprint/compile';
+import { computeMaterials } from '../blueprint/materials';
+import { dominantWood, rawMaterials } from '../blueprint/recipes';
+import { itemName } from '../blueprint/names';
 import { parseBlueprint } from '../blueprint/parse';
 import { buildModel, importProject } from '../project/project';
 import { decodeProject } from '../project/share';
@@ -57,6 +60,36 @@ export function toGameProject(model: CompiledModel, nome: string): GameProject {
     b.push(v.x, v.y - oy, v.z, i);
   }
   return { id: slugify(nome), nome, tam: [model.size.x, model.size.y, model.size.z], pal, b };
+}
+
+// ---------- itens brutos (estoque do bloco Holograma) ----------
+
+/** Item bruto que o projeto precisa: [id do item no Bedrock, quantidade, nome em português]. */
+/** Itens cujo id no inventário do Bedrock é diferente do id do bloco (a conversão dos blocos não serve). */
+const ITEM_ID: Record<string, string> = { sugar_cane: 'minecraft:sugar_cane', nether_brick: 'minecraft:netherbrick', oak_sign: 'minecraft:oak_sign' };
+export type RawItem = [string, number, string];
+
+/**
+ * Itens brutos (troncos, pedregulho, areia, minérios…) para construir o projeto inteiro, como na aba
+ * "Itens brutos" do site. Vai no pacote para o bloco Holograma mostrar quanto falta guardar.
+ */
+export function rawItemsOf(p: GameProject): RawItem[] {
+  const voxels: Voxel[] = [];
+  for (let i = 0; i + 3 < p.b.length; i += 4) {
+    const state = String(p.pal[p.b[i + 3]]?.[4] ?? '');
+    if (!state) continue;
+    const { id, props } = parseState(state);
+    voxels.push({ x: p.b[i], y: p.b[i + 1], z: p.b[i + 2], state, id, props });
+  }
+  const lines = computeMaterials(voxels);
+  const needs = new Map(lines.map((l) => [l.item, l.count]));
+  const raw = rawMaterials(needs, { stickWood: dominantWood(lines.map((l) => l.item)) });
+  return [...raw.raw.entries()]
+    .map(([javaId, n]): RawItem => {
+      const id = javaId.replace(/ \(.*\)$/, ''); // "water_bucket (fonte)" → "water_bucket"
+      return [ITEM_ID[id] ?? toBedrock(id, {})?.name ?? `minecraft:${id}`, n, itemName(javaId)];
+    })
+    .sort((a, b) => b[1] - a[1]);
 }
 
 // ---------- biblioteca (projetos que vão no pacote) ----------
@@ -251,7 +284,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
     animations: { 'animation.fizzi.giro': { loop: true, bones: { raiz: { rotation: [0, "q.property('fizzi:giro') * 90", 0] } } } },
   };
 
-  const meta = list.map((p, i) => ({ nome: p.nome, tam: p.tam, camadas: models[i].layers, blocos: p.b.length / 4 }));
+  const meta = list.map((p, i) => ({ nome: p.nome, tam: p.tam, camadas: models[i].layers, blocos: p.b.length / 4, mat: rawItemsOf(p) }));
   const projetosJs = `// Gerado pelo FIZZI MINE em ${new Date().toISOString()}\nexport const PROJETOS = ${JSON.stringify(meta)};\n`;
 
   const rpFiles: Record<string, Uint8Array> = {
@@ -327,6 +360,7 @@ export const holograma: ModDef = {
     'Craft na bancada: obsidiana nos 4 cantos, diamante nos 4 lados, papel no meio. Sai um BLOCO.',
     'Coloque o bloco e clique nele: escolher projeto, ligar/desligar, mover, girar 90°, camada por camada.',
     'Holograma translúcido com as texturas dos blocos do jogo (todos veem).',
+    'Estoque no bloco: guarde os itens brutos do projeto e veja quanto falta e a porcentagem que já tem.',
   ],
   options: [],
   ready: true,

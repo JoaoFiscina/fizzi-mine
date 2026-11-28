@@ -6,7 +6,7 @@
 // A construção aparece com as texturas do jogo, translúcida, num modelo 3D preso a uma entidade invisível
 // ("fizzi:projecao"). Cada bloco Holograma tem a sua projeção; quebrar o bloco apaga a projeção.
 
-import { world, system } from "@minecraft/server";
+import { world, system, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { PROJETOS } from "./projetos.js";
 
@@ -20,7 +20,7 @@ const ENTIDADE = "fizzi:projecao";
 const DISTANCIA_INICIAL = 1;
 
 /**
- * @typedef {{ nome: string, tam: number[], camadas: number[], blocos: number }} ProjetoInfo
+ * @typedef {{ nome: string, tam: number[], camadas: number[], blocos: number, mat?: [string, number, string][] }} ProjetoInfo
  * @typedef {{ x: number, y: number, z: number }} V3
  * @typedef {import("@minecraft/server").Entity} Entity
  * @typedef {import("@minecraft/server").Player} Player
@@ -111,6 +111,63 @@ function projetar(jogador, dim, bloco, indice) {
 }
 
 // ---------------------------------------------------------------------
+// ESTOQUE (itens guardados dentro do bloco Holograma)
+// ---------------------------------------------------------------------
+
+/** @param {Dimension} dim @param {V3} b */
+const chaveEstoque = (dim, b) => `fizzi:est_${dim.id}_${b.x}_${b.y}_${b.z}`;
+
+/** Itens guardados no bloco: { "minecraft:oak_log": 64, … }. @param {Dimension} dim @param {V3} b @returns {Record<string, number>} */
+function estoque(dim, b) {
+  try {
+    const s = world.getDynamicProperty(chaveEstoque(dim, b));
+    if (typeof s === "string") return JSON.parse(s);
+  } catch {
+    /* estoque vazio */
+  }
+  return {};
+}
+
+/** @param {Dimension} dim @param {V3} b @param {Record<string, number>} est */
+function salvarEstoque(dim, b, est) {
+  const limpo = Object.fromEntries(Object.entries(est).filter(([, n]) => n > 0));
+  world.setDynamicProperty(chaveEstoque(dim, b), Object.keys(limpo).length ? JSON.stringify(limpo) : undefined);
+}
+
+/** Quanto do projeto já está guardado. @param {ProjetoInfo} p @param {Record<string, number>} est */
+function progresso(p, est) {
+  const mat = p.mat ?? [];
+  const total = mat.reduce((a, [, n]) => a + n, 0);
+  const tem = mat.reduce((a, [id, n]) => a + Math.min(n, est[id] ?? 0), 0);
+  return { total, tem, falta: total - tem, pct: total ? Math.floor((tem / total) * 100) : 100 };
+}
+
+/** Cria pilhas do item (respeitando o máximo por pilha). @param {string} id @param {number} n */
+function pilhas(id, n) {
+  /** @type {ItemStack[]} */
+  const out = [];
+  try {
+    const max = new ItemStack(id, 1).maxAmount;
+    while (n > 0) {
+      const q = Math.min(n, max);
+      out.push(new ItemStack(id, q));
+      n -= q;
+    }
+  } catch {
+    /* item que não existe nesta versão */
+  }
+  return out;
+}
+
+/** Joga os itens do estoque no chão (quando o bloco é quebrado). @param {Dimension} dim @param {V3} b */
+function derrubarEstoque(dim, b) {
+  const est = estoque(dim, b);
+  const local = { x: b.x + 0.5, y: b.y + 0.5, z: b.z + 0.5 };
+  for (const [id, n] of Object.entries(est)) for (const it of pilhas(id, n)) dim.spawnItem(it, local);
+  salvarEstoque(dim, b, {});
+}
+
+// ---------------------------------------------------------------------
 // EVENTOS
 // ---------------------------------------------------------------------
 
@@ -125,10 +182,11 @@ world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
   system.run(() => menu(jogador, dim, bloco));
 });
 
-// quebrar o bloco apaga a projeção dele
+// quebrar o bloco apaga a projeção dele e derruba os itens guardados
 world.afterEvents.playerBreakBlock.subscribe((ev) => {
   if (ev.brokenBlockPermutation.type.id !== BLOCO) return;
   projecaoDe(ev.dimension, ev.block.location)?.remove();
+  derrubarEstoque(ev.dimension, ev.block.location);
 });
 
 // ---------------------------------------------------------------------
@@ -146,6 +204,7 @@ async function menu(jogador, dim, bloco) {
     e ? `Estado: ${ligado ? "§aligado§r" : "§7desligado§r"}` : "Escolha um projeto para projetar.",
     e && p ? `Camada: ${camada < 0 ? "todas" : `y=${p.camadas[camada]} (${camada + 1} de ${p.camadas.length})`}` : "",
     e ? `Giro: ${num(e, "fizzi:giro", 0) * 90}°` : "",
+    e && p && p.mat?.length ? `Materiais guardados: §e${progresso(p, estoque(dim, bloco)).pct}%§r` : "",
     "§8Não aparece nada (só uma sombra) ou o bloco está sem a textura? O pacote de recursos «Fizzi Holograma (recursos)» não está ativo.",
   ].filter(Boolean).join("\n");
 
@@ -165,6 +224,7 @@ async function menu(jogador, dim, bloco) {
       posicionar(e, centro(e));
     });
     botao("🧱 Camadas", () => camadas(jogador, e));
+    if (p.mat?.length) botao(`📦 Materiais (${progresso(p, estoque(dim, bloco)).pct}%)`, () => materiais(jogador, dim, bloco, p));
     botao("📍 Trazer para perto do bloco", () => posicionar(e, centroInicial(jogador, bloco, p)));
     botao("🗑 Apagar projeção", () => e.remove());
   }
@@ -244,4 +304,84 @@ async function camadas(jogador, e) {
   } else nova = -1;
   e.setProperty("fizzi:camada", nova);
   return camadas(jogador, e);
+}
+
+// ---------------------------------------------------------------------
+// MATERIAIS (estoque do bloco)
+// ---------------------------------------------------------------------
+
+/** @param {Player} jogador @param {Dimension} dim @param {V3} bloco @param {ProjetoInfo} p */
+async function materiais(jogador, dim, bloco, p) {
+  const est = estoque(dim, bloco);
+  const pr = progresso(p, est);
+  // o que mais falta aparece primeiro
+  const parte = (/** @type {[string, number, string]} */ m) => Math.min(1, (est[m[0]] ?? 0) / m[1]);
+  const mat = [...(p.mat ?? [])].sort((a, b) => parte(a) - parte(b));
+  const linhas = mat.map(([id, n, nome]) => {
+    const tem = Math.min(n, est[id] ?? 0);
+    return tem >= n ? `§a✔ ${nome}: ${n}/${n}§r` : `§f${nome}: §e${tem}/${n} §7(faltam ${n - tem})§r`;
+  });
+  const barra = "§a" + "|".repeat(Math.round(pr.pct / 5)) + "§8" + "|".repeat(20 - Math.round(pr.pct / 5));
+  const f = new ActionFormData()
+    .title(`📦 Materiais · ${pr.pct}%`)
+    .body(
+      [
+        `§b${p.nome}§r — itens brutos para construir tudo.`,
+        `${barra}§r  §e${pr.pct}%§r`,
+        pr.falta ? `Faltam §c${pr.falta}§r de ${pr.total} itens.` : "§aTudo guardado!§r",
+        "",
+        ...linhas,
+      ].join("\n"),
+    )
+    .button("⬇ Guardar do meu inventário\n§8só o que o projeto precisa")
+    .button("⬆ Pegar tudo de volta")
+    .button("✔ Pronto");
+  const r = await f.show(jogador);
+  if (r.canceled || r.selection === undefined || r.selection === 2) return;
+  if (r.selection === 0) guardar(jogador, dim, bloco, p);
+  else pegarDeVolta(jogador, dim, bloco);
+  return materiais(jogador, dim, bloco, p);
+}
+
+/** Tira do inventário do jogador os itens que o projeto ainda precisa. @param {Player} jogador @param {Dimension} dim @param {V3} bloco @param {ProjetoInfo} p */
+function guardar(jogador, dim, bloco, p) {
+  const inv = jogador.getComponent("minecraft:inventory")?.container;
+  if (!inv) return;
+  const est = estoque(dim, bloco);
+  /** @type {Record<string, number>} */
+  const precisa = {};
+  for (const [id, n] of p.mat ?? []) precisa[id] = (precisa[id] ?? 0) + n;
+  let guardados = 0;
+  for (let i = 0; i < inv.size; i++) {
+    const it = inv.getItem(i);
+    if (!it) continue;
+    const falta = (precisa[it.typeId] ?? 0) - (est[it.typeId] ?? 0);
+    if (falta <= 0) continue;
+    const q = Math.min(falta, it.amount);
+    if (q >= it.amount) inv.setItem(i, undefined);
+    else {
+      it.amount -= q;
+      inv.setItem(i, it);
+    }
+    est[it.typeId] = (est[it.typeId] ?? 0) + q;
+    guardados += q;
+  }
+  salvarEstoque(dim, bloco, est);
+  jogador.sendMessage(guardados ? `§a📦 Guardei ${guardados} itens no Holograma.` : "§eVocê não tem nenhum item que ainda falta para este projeto.");
+}
+
+/** Devolve tudo que está guardado (o que não couber cai no chão). @param {Player} jogador @param {Dimension} dim @param {V3} bloco */
+function pegarDeVolta(jogador, dim, bloco) {
+  const inv = jogador.getComponent("minecraft:inventory")?.container;
+  if (!inv) return;
+  const est = estoque(dim, bloco);
+  let n = 0;
+  for (const [id, q] of Object.entries(est))
+    for (const it of pilhas(id, q)) {
+      n += it.amount;
+      const sobra = inv.addItem(it);
+      if (sobra) dim.spawnItem(sobra, jogador.location);
+    }
+  salvarEstoque(dim, bloco, {});
+  jogador.sendMessage(n ? `§a📦 Peguei ${n} itens de volta.` : "§eO Holograma está vazio.");
 }

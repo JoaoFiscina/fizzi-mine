@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { strFromU8, unzipSync } from 'fflate';
-import { blockTexture, buildHolograma, gameProjectFromText, toGameProject } from '../src/mods/holograma';
+import { blockTexture, buildHolograma, gameProjectFromText, rawItemsOf, toGameProject } from '../src/mods/holograma';
 import { buildHologramModel } from '../src/mods/hologramModel';
 import { decodeTga, type Img, type TextureSource } from '../src/mods/bedrockTextures';
 import { zipPack } from '../src/mods/packs';
@@ -85,6 +85,17 @@ describe('Fizzi Holograma', () => {
     expect(rc.ignore_lighting).toBe(true);
     expect(r['materials/entity.material']).toBeUndefined();
     expect([...blockTexture('lado').subarray(0, 4)]).toEqual([137, 80, 78, 71]);
+  });
+
+  it('itens brutos do projeto vão no pacote (id do Bedrock, quantidade, nome)', async () => {
+    const g = toGameProject(compile(bp()), 'Casinha');
+    const mat = rawItemsOf(g);
+    // 6 pedras = 6 pedregulhos (fornalha); 1 laje de carvalho = 1 receita de 3 tábuas = 1 tronco; 1 papoula
+    expect(mat).toContainEqual(['minecraft:cobblestone', 6, expect.any(String)]);
+    expect(mat).toContainEqual(['minecraft:oak_log', 1, expect.any(String)]);
+    expect(mat.map((m) => m[0])).toContain('minecraft:poppy');
+    const { packs } = await buildHolograma([g], fakeTex);
+    expect(strFromU8(unzipSync(zipPack(packs[0]))['scripts/projetos.js'])).toContain('"mat":[[');
   });
 
   it('TGA: lê 32 bits sem compressão (de baixo para cima)', () => {
