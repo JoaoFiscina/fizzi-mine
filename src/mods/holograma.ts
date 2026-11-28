@@ -11,7 +11,7 @@ import { buildModel, importProject } from '../project/project';
 import { decodeProject } from '../project/share';
 import { lookFor } from '../render/blocks';
 import { toBedrock } from '../project/mcstructure';
-import { json, packVersion, type ModDef, type PackOut } from './packs';
+import { json, packVersion, stamp, type ModDef, type PackOut } from './packs';
 import { encodePng } from './png';
 import { onlineTextures, type TextureSource } from './bedrockTextures';
 import { buildHologramModel, type HologramModel } from './hologramModel';
@@ -197,7 +197,9 @@ export interface HologramBuild {
 
 /** Monta os dois pacotes (comportamento + recursos). As texturas do Bedrock vêm de `tex`. */
 export async function buildHolograma(list: GameProject[], tex: TextureSource, onProgress?: (msg: string) => void): Promise<HologramBuild> {
-  const version = packVersion(1);
+  const now = new Date();
+  const version = packVersion(1, now);
+  const st = stamp(now);
   const models: HologramModel[] = [];
   for (const [i, p] of list.entries()) {
     onProgress?.(`Montando ${p.nome} (${i + 1} de ${list.length})…`);
@@ -253,7 +255,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
   const rpFiles: Record<string, Uint8Array> = {
     'manifest.json': json({
       format_version: 2,
-      header: { name: 'Fizzi Holograma (recursos)', description: 'Bloco Holograma e modelos 3D dos projetos.', uuid: RP_UUID, version, min_engine_version: [1, 21, 90] },
+      header: { name: `Fizzi Holograma (recursos) · ${st.label}`, description: `Bloco Holograma e modelos 3D dos projetos. Versão de ${st.label}.`, uuid: RP_UUID, version, min_engine_version: [1, 21, 90] },
       modules: [{ type: 'resources', uuid: RP_MODULE_UUID, version }],
     }),
     'blocks.json': json({ format_version: '1.21.40', 'fizzi:holograma': { sound: 'stone' } }),
@@ -284,7 +286,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
 
   const bpManifest = {
     format_version: 2,
-    header: { name: 'Fizzi Holograma', description: `Bloco Holograma: projeta construções do FIZZI MINE. ${list.length} projeto(s).`, uuid: BP_UUID, version, min_engine_version: [1, 21, 90] },
+    header: { name: `Fizzi Holograma · ${st.label}`, description: `Bloco Holograma: projeta construções do FIZZI MINE. ${list.length} projeto(s). Versão de ${st.label}.`, uuid: BP_UUID, version, min_engine_version: [1, 21, 90] },
     modules: [
       { type: 'data', uuid: BP_DATA_UUID, version },
       { type: 'script', language: 'javascript', uuid: BP_SCRIPT_UUID, version, entry: 'scripts/main.js' },
@@ -299,7 +301,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
   return {
     packs: [
       {
-        name: 'FizziHolograma.mcpack',
+        name: `FizziHolograma_${st.file}.mcpack`,
         files: {
           'manifest.json': json(bpManifest),
           'blocks/holograma.json': json(block),
@@ -309,7 +311,7 @@ export async function buildHolograma(list: GameProject[], tex: TextureSource, on
           'scripts/projetos.js': strToU8(projetosJs),
         },
       },
-      { name: 'FizziHolograma_Recursos.mcpack', files: rpFiles },
+      { name: `FizziHolograma_Recursos_${st.file}.mcpack`, files: rpFiles },
     ],
     report: list.map((p, i) => ({ nome: p.nome, cubos: models[i].cubes, atlas: models[i].atlasSize.join('×') })),
   };

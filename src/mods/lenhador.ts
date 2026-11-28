@@ -5,7 +5,7 @@ import { strToU8 } from 'fflate';
 import mainJs from '../../mods/lenhador/scripts/main.js?raw';
 import comumJs from '../../mods/lenhador/scripts/comum.js?raw';
 import mineradorJs from '../../mods/lenhador/scripts/minerador.js?raw';
-import { json, packVersion, setConst, type ModDef, type ModValues } from './packs';
+import { json, packVersion, setConst, stamp, type ModDef, type ModValues } from './packs';
 
 // UUIDs fixos: são os mesmos do pacote que já está no Realm, para o novo substituir o antigo.
 const HEADER_UUID = '919d6264-d809-4169-81b5-b4fbf168ff0c';
@@ -36,12 +36,14 @@ export const lenhador: ModDef = {
     for (const k of ['MAX_TRONCOS', 'MIN_FOLHAS_NATURAIS', 'AGACHAR_DESATIVA']) main = setConst(main, k, v(k));
     let minerador = mineradorJs;
     for (const k of ['MINERADOR_ATIVO', 'MAX_MINERIOS', 'EXIGIR_AGACHADO']) minerador = setConst(minerador, k, v(k));
-    const version = packVersion(2);
+    const now = new Date();
+    const version = packVersion(2, now);
+    const st = stamp(now);
     const manifest = {
       format_version: 2,
       header: {
-        name: 'Fizzi Lenhador',
-        description: 'Machado derruba a árvore inteira; agachado com picareta quebra o veio de minério todo. Feito no FIZZI MINE.',
+        name: `Fizzi Lenhador · ${st.label}`,
+        description: `Machado derruba a árvore inteira; agachado com picareta quebra o veio de minério todo. Feito no FIZZI MINE. Versão de ${st.label}.`,
         uuid: HEADER_UUID,
         version,
         min_engine_version: [1, 21, 90],
@@ -51,7 +53,7 @@ export const lenhador: ModDef = {
     };
     return [
       {
-        name: 'FizziLenhador.mcpack',
+        name: `FizziLenhador_${st.file}.mcpack`,
         files: {
           'manifest.json': json(manifest),
           'scripts/main.js': strToU8(main),

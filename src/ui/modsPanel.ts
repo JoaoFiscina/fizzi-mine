@@ -1,7 +1,7 @@
 // Janela "🧩 Mods": cartões dos mods, opções de cada um e download (.mcpack ou .mcaddon com todos).
 
 import { MODS } from '../mods/registry';
-import { defaults, zipAddon, zipPack, type ModDef, type ModValues } from '../mods/packs';
+import { defaults, stamp, zipAddon, zipPack, type ModDef, type ModValues } from '../mods/packs';
 import { addToLibrary, gameProjectFromText, loadLibrary, removeFromLibrary, toGameProject, type GameProject } from '../mods/holograma';
 import type { CompiledModel } from '../blueprint/compile';
 
@@ -150,7 +150,7 @@ export function renderMods(root: HTMLElement, download: (name: string, data: Uin
       try {
         ctx.toast('Montando os mods (baixando texturas)…');
         const packs = (await Promise.all(MODS.filter((m) => m.ready && m.build).map((m) => m.build!(values(m))))).flat();
-        download('FizziMine-mods.mcaddon', zipAddon(packs));
+        download(`FizziMine-mods_${stamp().file}.mcaddon`, zipAddon(packs));
       } catch (err) {
         ctx.toast(`Não consegui montar os mods: ${(err as Error).message}`);
       }

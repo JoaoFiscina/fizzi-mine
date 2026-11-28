@@ -48,7 +48,18 @@ export function packVersion(major: number, now = new Date()): [number, number, n
   return [major, day, minute];
 }
 
-export const json = (o: unknown) => strToU8(JSON.stringify(o, null, 2));
+/**
+ * Data e hora do download, para pôr no nome do pacote e do arquivo: assim dá para saber, na lista do
+ * Minecraft e na pasta Downloads, qual é a versão nova e quais são as antigas.
+ */
+export function stamp(now = new Date()): { label: string; file: string } {
+  const p = (n: number) => String(n).padStart(2, '0');
+  const dia = `${p(now.getDate())}/${p(now.getMonth() + 1)}`;
+  const hora = `${p(now.getHours())}h${p(now.getMinutes())}`;
+  return { label: `${dia} ${hora}`, file: `${dia.replace('/', '-')}_${hora}` };
+}
+
+export const json =(o: unknown) => strToU8(JSON.stringify(o, null, 2));
 
 /** Troca "const NOME = valor;" no topo de um script pelo valor escolhido no site. */
 export function setConst(src: string, name: string, value: number | boolean): string {
