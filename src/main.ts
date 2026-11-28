@@ -9,6 +9,7 @@ import { Viewer } from './render/viewer';
 import { encodeProject, projectFromHash, shareUrl } from './project/share';
 import { buildDatapack } from './project/datapack';
 import { buildMcstructure } from './project/mcstructure';
+import { renderMods } from './ui/modsPanel';
 import { forgetPack, loadSavedPack, readPack, savePack, TextureLibrary } from './render/textures';
 import { LayerView } from './ui/layerView';
 import { esc, loadComplete, loadHave, renderFixes, renderRaw, renderInfo, renderIssues, renderMaterials, renderNotes, renderSteps } from './ui/panels';
@@ -1019,3 +1020,14 @@ $('bedrock-btn').addEventListener('click', () => {
 $('bedrock-download').addEventListener('click', () => {
   if (lastStructure) download(lastStructure.fileName, URL.createObjectURL(new Blob([lastStructure.data as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' })));
 });
+
+// ---------- 🧩 Mods (pacotes de comportamento do Bedrock) ----------
+
+const modsDialog = $<HTMLDialogElement>('mods-dialog');
+const saveBytes = (name: string, data: Uint8Array) => download(name, URL.createObjectURL(new Blob([data as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' })));
+let mods: ReturnType<typeof renderMods> | null = null;
+$('mods-btn').addEventListener('click', () => {
+  mods = renderMods($('mods-list'), saveBytes, { current: () => (model && project ? { name: project.name, model } : null), toast });
+  modsDialog.showModal();
+});
+$('mods-all').addEventListener('click', () => mods?.downloadAll());

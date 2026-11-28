@@ -27,6 +27,7 @@
             <button id="bedrock-btn" class="btn" disabled>📱 Levar para o jogo · Bedrock / Realms (.mcstructure)</button>
           </div>
         </details>
+        <button id="mods-btn" class="btn" title="Mods para o Minecraft Bedrock (funcionam no Realm)">🧩 Mods</button>
         <select id="example-select" title="Abrir um exemplo">
           <option value="">Exemplos…</option>
         </select>
@@ -311,6 +312,27 @@
         <div class="dialog-actions">
           <button value="close" class="btn">Fechar</button>
           <button id="bedrock-download" type="button" class="btn primary">⇩ Baixar .mcstructure</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="mods-dialog">
+      <form method="dialog">
+        <h2>🧩 Mods para o Minecraft Bedrock</h2>
+        <p class="small">Pacotes de comportamento que funcionam no <b>Realm</b>, sem experimentos. Ajuste as opções e baixe.</p>
+        <div id="mods-list"></div>
+        <details class="small howto-box">
+          <summary><b>Como instalar no Realm</b></summary>
+          <ol class="howto">
+            <li><b>Faça um backup do mundo</b> (Editar Realm → Backups → Baixar).</li>
+            <li>Dê dois cliques no <b>.mcpack</b> (ou no <b>.mcaddon</b>, que instala todos): o Minecraft importa sozinho.</li>
+            <li>Editar Realm → <b>Pacotes de comportamento</b> → ative o pacote → aplique. Se pedir, aceite também o pacote de recursos.</li>
+            <li>Mudou as opções? Baixe de novo e repita: a versão sobe sozinha e o Realm troca o pacote antigo.</li>
+          </ol>
+        </details>
+        <div class="dialog-actions">
+          <button value="close" class="btn">Fechar</button>
+          <button id="mods-all" type="button" class="btn primary">⇩ Baixar todos (.mcaddon)</button>
         </div>
       </form>
     </dialog>
