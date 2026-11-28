@@ -13,6 +13,9 @@ import type { GameProject } from './holograma';
 
 /** Transparência do holograma (1 = sólido). */
 export const OPACITY = 0.8;
+/** Tamanho de cada bloco do holograma (1 = bloco inteiro). Menor que 1: o bloco de verdade, quando colocado, cobre o holograma e dá para ver o que já foi preenchido. */
+export const SCALE = 0.9;
+const enc = (v: number) => Math.round((8 + (v - 8) * SCALE) * 1000) / 1000;
 
 type Box = { x0: number; y0: number; z0: number; x1: number; y1: number; z1: number; rot?: number; faces?: Face[] };
 type Shape = { boxes: Box[]; full: boolean };
@@ -172,10 +175,12 @@ export async function buildHologramModel(p: GameProject, identifier: string, tex
         uv[f] = { uv: [u + r[0], v + r[1]], uv_size: [Math.max(r[2], 0.01), Math.max(r[3], 0.01)] };
       }
       if (!Object.keys(uv).length) continue;
-      const wx1 = x * 16 + bx.x1;
+      // encolhe em direção ao centro do bloco (SCALE)
+      const [x0, y0, z0, x1, y1, z1] = [bx.x0, bx.y0, bx.z0, bx.x1, bx.y1, bx.z1].map(enc);
+      const wx1 = x * 16 + x1;
       const cube: Record<string, unknown> = {
-        origin: [-(wx1 - W * 8), y * 16 + bx.y0, z * 16 + bx.z0 - D * 8],
-        size: [bx.x1 - bx.x0, bx.y1 - bx.y0, bx.z1 - bx.z0],
+        origin: [-(wx1 - W * 8), y * 16 + y0, z * 16 + z0 - D * 8],
+        size: [x1 - x0, y1 - y0, z1 - z0].map((n) => Math.round(n * 1000) / 1000),
         uv,
       };
       if (bx.rot) {

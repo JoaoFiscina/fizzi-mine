@@ -42,14 +42,15 @@ describe('Fizzi Holograma', () => {
     expect(m.layers).toEqual([0, 1]);
     const c0 = geo.bones[1].cubes;
     expect(c0).toHaveLength(6);
-    // bloco (0,0,0) numa construção 3×2: x do mundo 0..16 vira -(16-24)=8 no modelo; z 0 vira -16
-    expect(c0[0].origin).toEqual([8, 0, -16]);
+    // bloco (0,0,0) numa construção 3×2, encolhido a 90%: x do mundo 0.8..15.2 vira -(15.2-24)=8.8; z 0.8 vira -15.2
+    expect(c0[0].origin).toEqual([8.8, 0.8, -15.2]);
+    expect(c0[0].size).toEqual([14.4, 14.4, 14.4]);
     // vizinho a leste (x+1) é pedra: a face leste some; a oeste (borda) fica
     expect(c0[0].uv.east).toBeUndefined();
     expect(c0[0].uv.west).toBeDefined();
     const c1 = geo.bones[2].cubes;
-    const slab = c1.find((c: any) => c.size[1] === 8);
-    expect(slab.size).toEqual([16, 8, 16]);
+    const slab = c1.find((c: any) => c.size[1] === 7.2);
+    expect(slab.size).toEqual([14.4, 7.2, 14.4]);
     expect(c1.filter((c: any) => c.rotation)).toHaveLength(2);
     // sem textura (poppy) vira um quadrado da cor do bloco no atlas
     expect(m.atlasSize[0]).toBeGreaterThanOrEqual(16);
@@ -65,7 +66,9 @@ describe('Fizzi Holograma', () => {
     expect(recipe.pattern).toEqual(['ODO', 'DPD', 'ODO']);
     expect(recipe.key).toEqual({ O: { item: 'minecraft:obsidian' }, D: { item: 'minecraft:diamond' }, P: { item: 'minecraft:paper' } });
     expect(recipe.result).toEqual({ item: 'fizzi:holograma' });
-    expect(JSON.parse(strFromU8(b['blocks/holograma.json']))['minecraft:block'].description.identifier).toBe('fizzi:holograma');
+    const blk = JSON.parse(strFromU8(b['blocks/holograma.json']))['minecraft:block'];
+    expect(blk.description.identifier).toBe('fizzi:holograma');
+    expect(blk.components['minecraft:geometry']).toBe('minecraft:geometry.full_block');
     const ent = JSON.parse(strFromU8(b['entities/fizzi_projecao.json']))['minecraft:entity'];
     expect(Object.keys(ent.description.properties)).toEqual(['fizzi:projeto', 'fizzi:camada', 'fizzi:giro', 'fizzi:ligado']);
     expect(strFromU8(b['scripts/projetos.js'])).toContain('"camadas":[0,1]');

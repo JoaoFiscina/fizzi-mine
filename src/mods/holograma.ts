@@ -129,7 +129,7 @@ export function blockTexture(face: 'topo' | 'lado' | 'baixo'): Uint8Array {
 // ---------- pacotes ----------
 
 const block = {
-  format_version: '1.21.40',
+  format_version: '1.21.80',
   'minecraft:block': {
     description: { identifier: 'fizzi:holograma', menu_category: { category: 'items' } },
     components: {
@@ -137,6 +137,8 @@ const block = {
       'minecraft:destructible_by_explosion': { explosion_resistance: 30 },
       'minecraft:light_emission': 7,
       'minecraft:map_color': '#2bd0d0',
+      // desde o 1.21.80, quem usa material_instances precisa dizer a geometria também (senão o bloco fica com cara de terra)
+      'minecraft:geometry': 'minecraft:geometry.full_block',
       'minecraft:material_instances': {
         '*': { texture: 'fizzi_holograma_lado', render_method: 'opaque' },
         up: { texture: 'fizzi_holograma_topo', render_method: 'opaque' },
